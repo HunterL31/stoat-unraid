@@ -26,14 +26,23 @@ Stoat is a modern, open-source chat platform that you can self-host on your Unra
 - 🔔 Push notifications
 - 🔐 End-to-end encryption for files
 - 🌐 Full API access
+- 🔒 **Tailscale support** - Share with friends without exposing your server!
 
 ### Requirements
 
 - **Unraid 6.9+** with Docker support
-- **Domain name** with DNS pointing to your server
-- **Ports 80 and 443** available (or use behind a reverse proxy)
+- **Domain name** with DNS pointing to your server (or use Tailscale!)
+- **Ports 80 and 443** available (or use Tailscale/reverse proxy)
 - **2GB+ RAM** recommended
 - **10GB+ storage** for data
+
+### Deployment Options
+
+| Option | Best For | Guide |
+|--------|----------|-------|
+| **Standard** | Public-facing server with domain | This README |
+| **Tailscale** | Sharing with friends/family securely | [TAILSCALE-SETUP.md](./TAILSCALE-SETUP.md) |
+| **Behind Proxy** | Already using SWAG/NPM | [Using with Reverse Proxy](#using-with-reverse-proxy-swagnpm) |
 
 ---
 

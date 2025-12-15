@@ -3,18 +3,31 @@ name: stoat
 # =============================================================================
 # STOAT CHAT - UNRAID DOCKER TEMPLATE (TAILSCALE EDITION)
 # =============================================================================
-# Self-hosted chat platform for Unraid servers with Tailscale integration
+# Self-hosted chat platform with its OWN Tailscale identity
 # 
+# SECURITY: This container has its own Tailscale node identity, completely
+# separate from your Unraid server. When you share access to Stoat, you're
+# ONLY sharing access to this chat service, not your whole server.
+#
 # SETUP:
 # 1. Get a Tailscale auth key from https://login.tailscale.com/admin/settings/keys
-# 2. Run: ./setup-unraid.sh your-machine.tailnet-name.ts.net --tailscale
-# 3. Add your auth key to .env: TAILSCALE_AUTHKEY=tskey-auth-xxxxx
-# 4. Start with: docker compose -f unraid/docker-compose.tailscale.yml up -d
+#    - Use a reusable key if you want the container to reconnect after restarts
+#    - Enable "Ephemeral" if you want the node to auto-remove when stopped
+# 2. Run: ./unraid/setup-unraid.sh stoat.your-tailnet.ts.net --tailscale
+# 3. Edit unraid/.env and set: TAILSCALE_AUTHKEY=tskey-auth-xxxxx
+# 4. Start: docker compose -f unraid/docker-compose.tailscale.yml up -d
+#
+# SHARING:
+# - Go to https://login.tailscale.com/admin/machines
+# - Find "stoat" in your machine list
+# - Click Share → Share with others
+# - They get access to Stoat only, not your Unraid server!
 # =============================================================================
 
 services:
   # ---------------------------------------------------------------------------
-  # Tailscale: Secure network access
+  # Tailscale: Isolated network endpoint for Stoat
+  # This container gets its OWN Tailscale identity separate from Unraid
   # ---------------------------------------------------------------------------
   tailscale:
     image: tailscale/tailscale:latest
@@ -26,6 +39,8 @@ services:
       - TS_STATE_DIR=/var/lib/tailscale
       - TS_SERVE_CONFIG=/config/serve.json
       - TS_USERSPACE=false
+      # Prevent this container from accessing other Tailscale nodes
+      - TS_EXTRA_ARGS=--accept-routes=false
     volumes:
       - ${APPDATA_PATH:-/mnt/user/appdata}/stoat/tailscale:/var/lib/tailscale
       - ./tailscale-serve.json:/config/serve.json:ro
