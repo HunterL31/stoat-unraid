@@ -45,47 +45,32 @@ Stoat is a modern, open-source chat platform that you can self-host on your Unra
 ssh root@your-unraid-ip
 ```
 
-### 2. Create the appdata directory
+### 2. Clone this repository
 
 ```bash
-mkdir -p /mnt/user/appdata/stoat
+# Clone directly to appdata (replace YOUR_USERNAME with your GitHub username)
+git clone https://github.com/YOUR_USERNAME/stoat-unraid.git /mnt/user/appdata/stoat
 cd /mnt/user/appdata/stoat
 ```
 
-### 3. Download the Unraid template files
+### 3. Run the setup script
 
 ```bash
-# Clone the repository
-git clone https://github.com/revoltchat/self-hosted.git temp
-cp -r temp/unraid/* .
-cp temp/Caddyfile .
-rm -rf temp
-
-# Or download just the unraid folder
-# wget https://github.com/revoltchat/self-hosted/archive/refs/heads/master.zip
-# unzip master.zip "self-hosted-master/unraid/*"
-# mv self-hosted-master/unraid/* .
-# rm -rf self-hosted-master master.zip
+chmod +x unraid/setup-unraid.sh
+./unraid/setup-unraid.sh your.domain.com
 ```
 
-### 4. Run the setup script
-
-```bash
-chmod +x setup-unraid.sh
-./setup-unraid.sh your.domain.com
-```
-
-### 5. Start Stoat
+### 4. Start Stoat
 
 ```bash
 # Test in foreground first
-docker compose up
+docker compose -f unraid/docker-compose.yml up
 
 # If everything works, run in background
-docker compose up -d
+docker compose -f unraid/docker-compose.yml up -d
 ```
 
-### 6. Access your instance
+### 5. Access your instance
 
 Open `https://your.domain.com` in your browser!
 
@@ -96,7 +81,7 @@ Open `https://your.domain.com` in your browser!
 ### Setup Script Options
 
 ```bash
-./setup-unraid.sh <domain> [options]
+./unraid/setup-unraid.sh <domain> [options]
 
 Options:
   --appdata PATH      Custom appdata path (default: /mnt/user/appdata)
@@ -110,16 +95,16 @@ Options:
 
 ```bash
 # Basic setup
-./setup-unraid.sh chat.example.com
+./unraid/setup-unraid.sh chat.example.com
 
 # Custom appdata location
-./setup-unraid.sh chat.example.com --appdata /mnt/cache/appdata
+./unraid/setup-unraid.sh chat.example.com --appdata /mnt/cache/appdata
 
 # Behind SWAG/Nginx Proxy Manager
-./setup-unraid.sh chat.example.com --behind-proxy --http-port 8080
+./unraid/setup-unraid.sh chat.example.com --behind-proxy --http-port 8080
 
 # Custom ports
-./setup-unraid.sh chat.example.com --http-port 8080 --https-port 8443
+./unraid/setup-unraid.sh chat.example.com --http-port 8080 --https-port 8443
 ```
 
 ---
@@ -131,7 +116,7 @@ If you're already using SWAG, Nginx Proxy Manager, or another reverse proxy:
 ### 1. Run setup with `--behind-proxy` flag
 
 ```bash
-./setup-unraid.sh chat.example.com --behind-proxy --http-port 8080
+./unraid/setup-unraid.sh chat.example.com --behind-proxy --http-port 8080
 ```
 
 ### 2. Configure your reverse proxy
@@ -182,17 +167,21 @@ After setup, your appdata folder will look like:
 
 ```
 /mnt/user/appdata/stoat/
-├── docker-compose.yml    # Main compose file
-├── Caddyfile             # Caddy reverse proxy config
-├── Revolt.toml           # Stoat configuration
-├── .env                  # Environment variables
-├── .env.web              # Web client config
-├── mongodb/              # MongoDB data
-├── redis/                # Redis/KeyDB data
-├── rabbitmq/             # RabbitMQ data
-├── minio/                # File storage (S3)
-├── caddy-data/           # Caddy certificates
-└── caddy-config/         # Caddy config cache
+├── unraid/
+│   ├── docker-compose.yml  # Unraid-optimized compose file
+│   ├── setup-unraid.sh     # Setup script
+│   ├── Caddyfile           # Caddy reverse proxy config
+│   ├── Revolt.toml         # Stoat configuration (generated)
+│   ├── .env                # Environment variables (generated)
+│   └── .env.web            # Web client config (generated)
+├── compose.yml             # Original compose file (not used)
+├── README.md               # Main documentation
+├── mongodb/                # MongoDB data
+├── redis/                  # Redis/KeyDB data
+├── rabbitmq/               # RabbitMQ data
+├── minio/                  # File storage (S3)
+├── caddy-data/             # Caddy certificates
+└── caddy-config/           # Caddy config cache
 ```
 
 ---
@@ -225,46 +214,53 @@ After setup, your appdata folder will look like:
 cd /mnt/user/appdata/stoat
 
 # All services
-docker compose logs -f
+docker compose -f unraid/docker-compose.yml logs -f
 
 # Specific service
-docker compose logs -f api
+docker compose -f unraid/docker-compose.yml logs -f api
 ```
 
 ### Restart services
 
 ```bash
-docker compose restart
+docker compose -f unraid/docker-compose.yml restart
 
 # Specific service
-docker compose restart api
+docker compose -f unraid/docker-compose.yml restart api
 ```
 
 ### Update to latest version
 
 ```bash
 cd /mnt/user/appdata/stoat
-docker compose pull
-docker compose up -d
+
+# Pull latest repo changes
+git pull
+
+# Pull latest Docker images
+docker compose -f unraid/docker-compose.yml pull
+docker compose -f unraid/docker-compose.yml up -d
 ```
 
 ### Stop all services
 
 ```bash
-docker compose down
+docker compose -f unraid/docker-compose.yml down
 ```
 
 ### Backup data
 
 ```bash
+cd /mnt/user/appdata/stoat
+
 # Stop services first for consistent backup
-docker compose down
+docker compose -f unraid/docker-compose.yml down
 
 # Backup the entire stoat folder
 tar -czvf stoat-backup-$(date +%Y%m%d).tar.gz /mnt/user/appdata/stoat
 
 # Restart services
-docker compose up -d
+docker compose -f unraid/docker-compose.yml up -d
 ```
 
 ---
@@ -273,7 +269,7 @@ docker compose up -d
 
 ### Making Your Instance Invite-Only
 
-1. Edit `Revolt.toml` and add:
+1. Edit `unraid/Revolt.toml` and add:
 
 ```toml
 [general]
@@ -283,7 +279,7 @@ invite_only = true
 2. Create an invite code:
 
 ```bash
-docker compose exec database mongosh
+docker compose -f unraid/docker-compose.yml exec database mongosh
 
 # In mongo shell:
 use revolt
@@ -293,12 +289,12 @@ db.invites.insertOne({ _id: "your_invite_code_here" })
 3. Restart services:
 
 ```bash
-docker compose restart api
+docker compose -f unraid/docker-compose.yml restart api
 ```
 
 ### Custom Configuration
 
-Edit `Revolt.toml` for advanced settings. See the [full configuration reference](https://github.com/revoltchat/backend/blob/stable/crates/core/config/Revolt.toml).
+Edit `unraid/Revolt.toml` for advanced settings. See the [full configuration reference](https://github.com/revoltchat/backend/blob/stable/crates/core/config/Revolt.toml).
 
 Notable options:
 - Email verification
@@ -314,10 +310,10 @@ Notable options:
 
 ```bash
 # Check for errors
-docker compose logs
+docker compose -f unraid/docker-compose.yml logs
 
 # Verify all images are pulled
-docker compose pull
+docker compose -f unraid/docker-compose.yml pull
 
 # Check disk space
 df -h /mnt/user/appdata
@@ -326,7 +322,7 @@ df -h /mnt/user/appdata
 ### Can't access the web interface
 
 1. Verify DNS is pointing to your server
-2. Check Caddy logs: `docker compose logs caddy`
+2. Check Caddy logs: `docker compose -f unraid/docker-compose.yml logs caddy`
 3. Ensure ports 80/443 aren't blocked
 4. Check firewall settings in Unraid
 
@@ -334,10 +330,10 @@ df -h /mnt/user/appdata
 
 ```bash
 # Check MongoDB status
-docker compose logs database
+docker compose -f unraid/docker-compose.yml logs database
 
 # Verify health check
-docker compose ps
+docker compose -f unraid/docker-compose.yml ps
 ```
 
 ### WebSocket connection failed
@@ -350,10 +346,10 @@ docker compose ps
 
 ```bash
 cd /mnt/user/appdata/stoat
-docker compose down -v
+docker compose -f unraid/docker-compose.yml down -v
 rm -rf mongodb redis rabbitmq minio caddy-data caddy-config
-./setup-unraid.sh your.domain.com
-docker compose up -d
+./unraid/setup-unraid.sh your.domain.com
+docker compose -f unraid/docker-compose.yml up -d
 ```
 
 ---

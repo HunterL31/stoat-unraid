@@ -13,35 +13,29 @@ Since Stoat is a multi-container application (13 Docker containers working toget
 3. Search for **"Docker Compose Manager"** or **"Compose.Manager"**
 4. Click **Install**
 
-![Install Compose Manager](https://i.imgur.com/placeholder.png)
-
 ---
 
-### Step 2: Download Stoat Files (One-time SSH)
+### Step 2: Clone the Repository (One-time SSH)
 
-Unfortunately, the initial setup requires a quick SSH session to download files and generate security keys:
+The initial setup requires a quick SSH session to clone the repo and generate security keys:
 
 ```bash
 # SSH into your Unraid server
 ssh root@YOUR-UNRAID-IP
 
-# Create the stoat directory
-mkdir -p /mnt/user/appdata/stoat
+# Clone directly to the appdata folder
+git clone https://github.com/YOUR_USERNAME/stoat-unraid.git /mnt/user/appdata/stoat
 cd /mnt/user/appdata/stoat
 
-# Download the files
-git clone https://github.com/revoltchat/self-hosted.git temp
-cp -r temp/unraid/* .
-cp temp/Caddyfile .
-rm -rf temp
-
 # Run the setup script (replace with YOUR domain)
-chmod +x setup-unraid.sh
-./setup-unraid.sh chat.yourdomain.com
+chmod +x unraid/setup-unraid.sh
+./unraid/setup-unraid.sh chat.yourdomain.com
 
 # Exit SSH
 exit
 ```
+
+> **Note:** Replace `YOUR_USERNAME` with your GitHub username in the clone URL.
 
 ---
 
@@ -52,7 +46,7 @@ exit
 3. Click **Add New Stack**
 4. Configure:
    - **Name**: `stoat`
-   - **Compose File**: `/mnt/user/appdata/stoat/docker-compose.yml`
+   - **Compose File**: `/mnt/user/appdata/stoat/unraid/docker-compose.yml`
 5. Click **Save**
 
 ---
@@ -103,13 +97,27 @@ You can also see individual container status in the main Docker tab - all Stoat 
 
 ---
 
+## Updating Stoat
+
+To pull the latest changes from your repository:
+
+```bash
+ssh root@YOUR-UNRAID-IP
+cd /mnt/user/appdata/stoat
+git pull
+```
+
+Then in the Unraid GUI: **Docker → Compose → stoat → Pull & Recreate**
+
+---
+
 ## Alternative: Using Behind SWAG/NPM
 
 If you're already using SWAG or Nginx Proxy Manager:
 
 ```bash
 # During setup, use the --behind-proxy flag:
-./setup-unraid.sh chat.yourdomain.com --behind-proxy --http-port 8080
+./unraid/setup-unraid.sh chat.yourdomain.com --behind-proxy --http-port 8080
 ```
 
 Then configure your existing reverse proxy to forward to `stoat-caddy:80`.
@@ -131,7 +139,7 @@ Then configure your existing reverse proxy to forward to `stoat-caddy:80`.
 ```bash
 ssh root@YOUR-UNRAID-IP
 cd /mnt/user/appdata/stoat
-./setup-unraid.sh new.domain.com
+./unraid/setup-unraid.sh new.domain.com
 ```
 Then restart the stack from the GUI.
 
@@ -155,4 +163,3 @@ Stoat requires 13 interconnected services:
 - Push notifications (Pushd)
 
 These all need to communicate with each other and share configuration, which is why Docker Compose is the right tool for the job!
-
