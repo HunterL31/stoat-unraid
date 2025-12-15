@@ -28,6 +28,7 @@ services:
   # ---------------------------------------------------------------------------
   # Tailscale: Isolated network endpoint for Stoat
   # This container gets its OWN Tailscale identity separate from Unraid
+  # Forwards HTTPS traffic to Caddy on the internal network
   # ---------------------------------------------------------------------------
   tailscale:
     image: tailscale/tailscale:latest
@@ -37,18 +38,19 @@ services:
     environment:
       - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
       - TS_STATE_DIR=/var/lib/tailscale
-      - TS_SERVE_CONFIG=/config/serve.json
       - TS_USERSPACE=false
       # Prevent this container from accessing other Tailscale nodes
       - TS_EXTRA_ARGS=--accept-routes=false
     volumes:
       - ${APPDATA_PATH:-/mnt/user/appdata}/stoat/tailscale:/var/lib/tailscale
-      - ./tailscale-serve.json:/config/serve.json:ro
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
     devices:
       - /dev/net/tun:/dev/net/tun
+    # Connect to both networks so it can reach Caddy
+    networks:
+      - default
     labels:
       net.unraid.docker.managed: "composeman"
       net.unraid.docker.icon: "https://tailscale.com/files/favicon-32x32.png"
@@ -132,21 +134,19 @@ services:
       net.unraid.docker.managed: "composeman"
 
   # ---------------------------------------------------------------------------
-  # Caddy: Reverse proxy / Web server (internal only with Tailscale)
+  # Caddy: Reverse proxy / Web server
+  # No public ports - only accessible via Tailscale
   # ---------------------------------------------------------------------------
   caddy:
     image: docker.io/caddy:latest
     container_name: stoat-caddy
     restart: unless-stopped
     env_file: .env.web
-    # No exposed ports - Tailscale handles external access
-    network_mode: service:tailscale
+    # No ports exposed to host - Tailscale handles external access
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./Caddyfile.tailscale:/etc/caddy/Caddyfile:ro
       - ${APPDATA_PATH:-/mnt/user/appdata}/stoat/caddy-data:/data
       - ${APPDATA_PATH:-/mnt/user/appdata}/stoat/caddy-config:/config
-    depends_on:
-      - tailscale
     labels:
       net.unraid.docker.managed: "composeman"
 
@@ -296,4 +296,3 @@ services:
       "
     labels:
       net.unraid.docker.managed: "composeman"
-

@@ -197,7 +197,13 @@ EOF
 create_env_web() {
     log_info "Creating .env.web file..."
     
-    if [ "$BEHIND_PROXY" = true ]; then
+    if [ "$USE_TAILSCALE" = true ]; then
+        # Tailscale mode - Caddy listens on :80, Tailscale handles HTTPS
+        cat > .env.web << EOF
+HOSTNAME=:80
+REVOLT_PUBLIC_URL=https://${DOMAIN}/api
+EOF
+    elif [ "$BEHIND_PROXY" = true ]; then
         # Behind another proxy - use internal port
         cat > .env.web << EOF
 HOSTNAME=:80
@@ -309,14 +315,18 @@ print_summary() {
         echo ""
         echo "1. Get a Tailscale auth key from:"
         echo -e "   ${BLUE}https://login.tailscale.com/admin/settings/keys${NC}"
+        echo "   (Enable 'Reusable' so it reconnects after restarts)"
         echo ""
-        echo "2. Add your auth key to .env:"
+        echo "2. Edit unraid/.env and set your auth key:"
         echo -e "   ${BLUE}TAILSCALE_AUTHKEY=tskey-auth-xxxxx${NC}"
         echo ""
         echo "3. Start Stoat with Tailscale compose file:"
         echo -e "   ${BLUE}docker compose -f unraid/docker-compose.tailscale.yml up -d${NC}"
         echo ""
-        echo "4. Access your instance via Tailscale at:"
+        echo "4. Configure Tailscale Serve (one-time):"
+        echo -e "   ${BLUE}chmod +x unraid/tailscale-setup.sh && ./unraid/tailscale-setup.sh${NC}"
+        echo ""
+        echo "5. Access your instance via Tailscale at:"
         echo -e "   ${BLUE}https://${DOMAIN}${NC}"
     else
         echo -e "HTTP Port:     ${BLUE}${HTTP_PORT}${NC}"
