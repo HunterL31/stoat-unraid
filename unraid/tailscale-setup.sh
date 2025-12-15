@@ -23,7 +23,7 @@ echo -e "${BLUE}Setting up Tailscale Serve...${NC}"
 if ! docker ps --format '{{.Names}}' | grep -q '^stoat-tailscale$'; then
     echo -e "${RED}Error: stoat-tailscale container is not running${NC}"
     echo "Start the containers first with:"
-    echo "  docker compose -f unraid/docker-compose.tailscale.yml up -d"
+    echo "  docker compose up -d"
     exit 1
 fi
 
@@ -46,13 +46,22 @@ fi
 
 echo -e "${GREEN}Tailscale connected!${NC}"
 
-# Get the Tailscale hostname
-TS_HOSTNAME=$(docker exec stoat-tailscale tailscale status --json | grep -o '"Self":{"[^"]*' | head -1 | sed 's/"Self":{"//') 
-echo "Tailscale node: ${TS_HOSTNAME:-stoat}"
+# Get the Tailscale IP
+TS_IP=$(docker exec stoat-tailscale tailscale ip -4)
+echo "Tailscale IP: ${TS_IP}"
 
-# Configure Tailscale Serve to forward HTTPS to Caddy
-echo "Configuring Tailscale Serve..."
-docker exec stoat-tailscale tailscale serve --bg --https=443 http://caddy:80
+# Get the Caddy container IP on the docker network
+CADDY_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' stoat-caddy)
+echo "Caddy IP: ${CADDY_IP}"
+
+if [ -z "$CADDY_IP" ]; then
+    echo -e "${RED}Error: Could not get Caddy container IP${NC}"
+    exit 1
+fi
+
+# Configure Tailscale Serve to forward HTTPS to Caddy's container IP
+echo "Configuring Tailscale Serve to proxy to ${CADDY_IP}:80..."
+docker exec stoat-tailscale tailscale serve --bg --https=443 http://${CADDY_IP}:80
 
 # Verify serve is running
 echo ""
@@ -60,12 +69,19 @@ echo -e "${GREEN}Tailscale Serve configured!${NC}"
 echo ""
 docker exec stoat-tailscale tailscale serve status
 
+# Get the full Tailscale hostname
+TS_HOSTNAME=$(docker exec stoat-tailscale tailscale status --json 2>/dev/null | grep -o '"DNSName":"[^"]*"' | head -1 | sed 's/"DNSName":"//;s/"//' | sed 's/\.$//')
+
 echo ""
 echo -e "${GREEN}═══════════════════════════════════════════════════════════════════${NC}"
 echo -e "${GREEN}                    TAILSCALE SETUP COMPLETE!                       ${NC}"
 echo -e "${GREEN}═══════════════════════════════════════════════════════════════════${NC}"
 echo ""
-echo -e "Access Stoat at: ${BLUE}https://stoat.YOUR-TAILNET.ts.net${NC}"
+if [ -n "$TS_HOSTNAME" ]; then
+    echo -e "Access Stoat at: ${BLUE}https://${TS_HOSTNAME}${NC}"
+else
+    echo -e "Access Stoat at: ${BLUE}https://stoat.YOUR-TAILNET.ts.net${NC}"
+fi
 echo ""
 echo -e "${YELLOW}To share with others:${NC}"
 echo "1. Go to https://login.tailscale.com/admin/machines"
