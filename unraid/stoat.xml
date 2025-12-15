@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>Stoat-Chat</Name>
+  <Repository>ghcr.io/revoltchat/server:20250930-2</Repository>
+  <Registry>https://github.com/revoltchat/self-hosted</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/revoltchat/self-hosted/issues</Support>
+  <Project>https://revolt.chat</Project>
+  <Overview>
+    Stoat is a self-hosted chat platform - an open source alternative to Discord.
+    
+    IMPORTANT: This is a multi-container application. Use the docker-compose setup in the unraid folder.
+    
+    Features:
+    - Real-time messaging with WebSocket support
+    - File uploads and attachments
+    - Image/link previews
+    - GIF search via Tenor
+    - Push notifications
+    - Full API access
+    
+    Requirements:
+    - Domain name with DNS pointing to your server
+    - Ports 80 and 443 available (or use behind reverse proxy)
+    - At least 2GB RAM recommended
+    
+    Setup Instructions:
+    1. SSH into your Unraid server
+    2. Navigate to: /mnt/user/appdata/stoat
+    3. Clone the repo or copy the unraid folder contents
+    4. Run: ./setup-unraid.sh your.domain.com
+    5. Run: docker compose up -d
+  </Overview>
+  <Category>Network:Chat Productivity:</Category>
+  <WebUI>https://[STOAT_DOMAIN]</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/revoltchat/self-hosted/master/unraid/stoat.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/revoltchat/revoltchat-solid/master/public/assets/icons/android-chrome-512x512.png</Icon>
+  <ExtraParams/>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled/>
+  <DonateText>Support Revolt Development</DonateText>
+  <DonateLink>https://opencollective.com/revolt</DonateLink>
+  <Requires>
+    This is a docker-compose based application. Please use the setup script and docker-compose instead of this template directly.
+    
+    See: https://github.com/revoltchat/self-hosted/tree/master/unraid
+  </Requires>
+  <Config Name="Domain" Target="STOAT_DOMAIN" Default="chat.example.com" Mode="" Description="Your domain name for Stoat (e.g., chat.example.com)" Type="Variable" Display="always" Required="true" Mask="false"/>
+  <Config Name="HTTP Port" Target="80" Default="80" Mode="tcp" Description="HTTP port for Caddy" Type="Port" Display="always" Required="true" Mask="false"/>
+  <Config Name="HTTPS Port" Target="443" Default="443" Mode="tcp" Description="HTTPS port for Caddy" Type="Port" Display="always" Required="true" Mask="false"/>
+  <Config Name="Appdata Path" Target="/config" Default="/mnt/user/appdata/stoat" Mode="rw" Description="Path to store Stoat configuration and data" Type="Path" Display="always" Required="true" Mask="false"/>
+</Container>
+

@@ -1,0 +1,32 @@
+# Environment files (contain secrets)
+.env
+.env.web
+Revolt.toml
+
+# Data directories
+data/
+mongodb/
+redis/
+rabbitmq/
+minio/
+caddy-data/
+caddy-config/
+
+# Generated keys
+*.pem
+*.key
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+

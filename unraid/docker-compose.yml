@@ -1,0 +1,259 @@
+name: stoat
+
+# =============================================================================
+# STOAT CHAT - UNRAID DOCKER TEMPLATE
+# =============================================================================
+# Self-hosted chat platform for Unraid servers
+# 
+# SETUP:
+# 1. Copy .env.example to .env and configure your settings
+# 2. Run the setup script: ./setup-unraid.sh your.domain.com
+# 3. Start with: docker compose up -d
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # MongoDB: Primary Database
+  # ---------------------------------------------------------------------------
+  database:
+    image: docker.io/mongo:latest
+    container_name: stoat-database
+    restart: unless-stopped
+    volumes:
+      - ${APPDATA_PATH:-/mnt/user/appdata}/stoat/mongodb:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    labels:
+      net.unraid.docker.managed: "composeman"
+      net.unraid.docker.icon: "https://raw.githubusercontent.com/revoltchat/self-hosted/master/.github/stoat-icon.png"
+
+  # ---------------------------------------------------------------------------
+  # Redis (KeyDB): Event message broker & KV store
+  # ---------------------------------------------------------------------------
+  redis:
+    image: docker.io/eqalpha/keydb:latest
+    container_name: stoat-redis
+    restart: unless-stopped
+    volumes:
+      - ${APPDATA_PATH:-/mnt/user/appdata}/stoat/redis:/data
+    labels:
+      net.unraid.docker.managed: "composeman"
+
+  # ---------------------------------------------------------------------------
+  # RabbitMQ: Internal message broker
+  # ---------------------------------------------------------------------------
+  rabbit:
+    image: docker.io/rabbitmq:4
+    container_name: stoat-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-rabbituser}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-rabbitpass}
+    volumes:
+      - ${APPDATA_PATH:-/mnt/user/appdata}/stoat/rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    labels:
+      net.unraid.docker.managed: "composeman"
+
+  # ---------------------------------------------------------------------------
+  # MinIO: S3-compatible storage server for file uploads
+  # ---------------------------------------------------------------------------
+  minio:
+    image: docker.io/minio/minio:latest
+    container_name: stoat-minio
+    command: server /data
+    volumes:
+      - ${APPDATA_PATH:-/mnt/user/appdata}/stoat/minio:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER:-minioautumn}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASS:-minioautumn}
+      MINIO_DOMAIN: minio
+    networks:
+      default:
+        aliases:
+          - revolt-uploads.minio
+          - attachments.minio
+          - avatars.minio
+          - backgrounds.minio
+          - icons.minio
+          - banners.minio
+          - emojis.minio
+    restart: unless-stopped
+    labels:
+      net.unraid.docker.managed: "composeman"
+
+  # ---------------------------------------------------------------------------
+  # Caddy: Reverse proxy / Web server with automatic HTTPS
+  # ---------------------------------------------------------------------------
+  caddy:
+    image: docker.io/caddy:latest
+    container_name: stoat-caddy
+    restart: unless-stopped
+    env_file: .env.web
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${APPDATA_PATH:-/mnt/user/appdata}/stoat/caddy-data:/data
+      - ${APPDATA_PATH:-/mnt/user/appdata}/stoat/caddy-config:/config
+    labels:
+      net.unraid.docker.managed: "composeman"
+      net.unraid.docker.webui: "https://${STOAT_DOMAIN:-localhost}"
+
+  # ---------------------------------------------------------------------------
+  # API Server: Main Stoat backend
+  # ---------------------------------------------------------------------------
+  api:
+    image: ghcr.io/revoltchat/server:20250930-2
+    container_name: stoat-api
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      rabbit:
+        condition: service_healthy
+    volumes:
+      - ./Revolt.toml:/Revolt.toml:ro
+    restart: unless-stopped
+    labels:
+      net.unraid.docker.managed: "composeman"
+
+  # ---------------------------------------------------------------------------
+  # Events: WebSocket service for real-time events
+  # ---------------------------------------------------------------------------
+  events:
+    image: ghcr.io/revoltchat/bonfire:20250930-2
+    container_name: stoat-events
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - ./Revolt.toml:/Revolt.toml:ro
+    restart: unless-stopped
+    labels:
+      net.unraid.docker.managed: "composeman"
+
+  # ---------------------------------------------------------------------------
+  # Web: Frontend web application
+  # ---------------------------------------------------------------------------
+  web:
+    image: ghcr.io/revoltchat/client:master
+    container_name: stoat-web
+    restart: unless-stopped
+    env_file: .env.web
+    labels:
+      net.unraid.docker.managed: "composeman"
+
+  # ---------------------------------------------------------------------------
+  # Autumn: File server for uploads/attachments
+  # ---------------------------------------------------------------------------
+  autumn:
+    image: ghcr.io/revoltchat/autumn:20250930-2
+    container_name: stoat-autumn
+    depends_on:
+      database:
+        condition: service_healthy
+      createbuckets:
+        condition: service_completed_successfully
+    volumes:
+      - ./Revolt.toml:/Revolt.toml:ro
+    restart: unless-stopped
+    labels:
+      net.unraid.docker.managed: "composeman"
+
+  # ---------------------------------------------------------------------------
+  # January: Metadata and image proxy
+  # ---------------------------------------------------------------------------
+  january:
+    image: ghcr.io/revoltchat/january:20250930-2
+    container_name: stoat-january
+    volumes:
+      - ./Revolt.toml:/Revolt.toml:ro
+    restart: unless-stopped
+    labels:
+      net.unraid.docker.managed: "composeman"
+
+  # ---------------------------------------------------------------------------
+  # Gifbox: Tenor GIF proxy
+  # ---------------------------------------------------------------------------
+  gifbox:
+    image: ghcr.io/revoltchat/gifbox:20250930-2
+    container_name: stoat-gifbox
+    volumes:
+      - ./Revolt.toml:/Revolt.toml:ro
+    restart: unless-stopped
+    labels:
+      net.unraid.docker.managed: "composeman"
+
+  # ---------------------------------------------------------------------------
+  # Crond: Scheduled task daemon
+  # ---------------------------------------------------------------------------
+  crond:
+    image: ghcr.io/revoltchat/crond:20250930-2
+    container_name: stoat-crond
+    depends_on:
+      database:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    volumes:
+      - ./Revolt.toml:/Revolt.toml:ro
+    restart: unless-stopped
+    labels:
+      net.unraid.docker.managed: "composeman"
+
+  # ---------------------------------------------------------------------------
+  # Pushd: Push notification daemon
+  # ---------------------------------------------------------------------------
+  pushd:
+    image: ghcr.io/revoltchat/pushd:20250930-2
+    container_name: stoat-pushd
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      rabbit:
+        condition: service_healthy
+    volumes:
+      - ./Revolt.toml:/Revolt.toml:ro
+    restart: unless-stopped
+    labels:
+      net.unraid.docker.managed: "composeman"
+
+  # ---------------------------------------------------------------------------
+  # Create Buckets: One-time initialization for MinIO
+  # ---------------------------------------------------------------------------
+  createbuckets:
+    image: docker.io/minio/mc:latest
+    container_name: stoat-createbuckets
+    depends_on:
+      - minio
+    environment:
+      MINIO_USER: ${MINIO_USER:-minioautumn}
+      MINIO_PASS: ${MINIO_PASS:-minioautumn}
+    entrypoint: >
+      /bin/sh -c "
+      while ! /usr/bin/mc ready minio; do
+        /usr/bin/mc alias set minio http://minio:9000 $${MINIO_USER} $${MINIO_PASS};
+        echo 'Waiting for MinIO...' && sleep 1;
+      done;
+      /usr/bin/mc mb minio/revolt-uploads --ignore-existing;
+      exit 0;
+      "
+    labels:
+      net.unraid.docker.managed: "composeman"
+
