@@ -11,6 +11,7 @@
 #   --http-port PORT  HTTP port (default: 80)
 #   --https-port PORT HTTPS port (default: 443)
 #   --behind-proxy    Configure for use behind another reverse proxy
+#   --tailscale       Configure for Tailscale access (no public ports)
 #   --help            Show this help message
 # =============================================================================
 
@@ -28,6 +29,7 @@ APPDATA_PATH="/mnt/user/appdata"
 HTTP_PORT="80"
 HTTPS_PORT="443"
 BEHIND_PROXY=false
+USE_TAILSCALE=false
 
 # -----------------------------------------------------------------------------
 # Functions
@@ -55,18 +57,21 @@ print_help() {
     echo ""
     echo "Arguments:"
     echo "  domain              Your domain name (e.g., chat.example.com)"
+    echo "                      For Tailscale: your-machine.tailnet-name.ts.net"
     echo ""
     echo "Options:"
     echo "  --appdata PATH      Custom appdata path (default: /mnt/user/appdata)"
     echo "  --http-port PORT    HTTP port (default: 80)"
     echo "  --https-port PORT   HTTPS port (default: 443)"
     echo "  --behind-proxy      Configure for use behind another reverse proxy (SWAG, NPM, etc.)"
+    echo "  --tailscale         Configure for Tailscale access (no public ports exposed)"
     echo "  --help              Show this help message"
     echo ""
     echo "Examples:"
     echo "  $0 chat.example.com"
     echo "  $0 chat.example.com --behind-proxy --http-port 8080"
     echo "  $0 chat.example.com --appdata /mnt/cache/appdata"
+    echo "  $0 stoat.tail1234.ts.net --tailscale"
 }
 
 log_info() {
@@ -135,6 +140,11 @@ create_directories() {
         "${APPDATA_PATH}/stoat/caddy-config"
     )
     
+    # Add Tailscale directory if using Tailscale
+    if [ "$USE_TAILSCALE" = true ]; then
+        dirs+=("${APPDATA_PATH}/stoat/tailscale")
+    fi
+    
     for dir in "${dirs[@]}"; do
         mkdir -p "$dir"
     done
@@ -169,6 +179,17 @@ RABBITMQ_PASS=$(openssl rand -hex 16)
 MINIO_USER=minioautumn
 MINIO_PASS=$(openssl rand -hex 16)
 EOF
+
+    # Add Tailscale config if enabled
+    if [ "$USE_TAILSCALE" = true ]; then
+        cat >> .env << EOF
+
+# Tailscale Configuration
+# Get an auth key from: https://login.tailscale.com/admin/settings/keys
+TAILSCALE_AUTHKEY=tskey-auth-REPLACE_WITH_YOUR_KEY
+TAILSCALE_HOSTNAME=${DOMAIN%%.*}
+EOF
+    fi
 
     log_success ".env file created"
 }
@@ -280,26 +301,45 @@ print_summary() {
     echo ""
     echo -e "Domain:        ${BLUE}${DOMAIN}${NC}"
     echo -e "Data Path:     ${BLUE}${APPDATA_PATH}/stoat${NC}"
-    echo -e "HTTP Port:     ${BLUE}${HTTP_PORT}${NC}"
-    echo -e "HTTPS Port:    ${BLUE}${HTTPS_PORT}${NC}"
-    echo ""
-    echo -e "${YELLOW}Next Steps:${NC}"
-    echo ""
-    echo "1. Ensure your domain DNS points to this server"
-    echo ""
-    echo "2. Start Stoat in foreground to verify:"
-    echo -e "   ${BLUE}docker compose up${NC}"
-    echo ""
-    echo "3. If everything works, run in background:"
-    echo -e "   ${BLUE}docker compose up -d${NC}"
-    echo ""
-    echo "4. Access your instance at:"
-    echo -e "   ${BLUE}https://${DOMAIN}${NC}"
-    echo ""
-    if [ "$BEHIND_PROXY" = true ]; then
-        echo -e "${YELLOW}Note:${NC} Configured for use behind a reverse proxy."
-        echo "      Make sure your proxy forwards to port ${HTTP_PORT}"
+    
+    if [ "$USE_TAILSCALE" = true ]; then
+        echo -e "Mode:          ${BLUE}Tailscale${NC}"
         echo ""
+        echo -e "${YELLOW}Next Steps:${NC}"
+        echo ""
+        echo "1. Get a Tailscale auth key from:"
+        echo -e "   ${BLUE}https://login.tailscale.com/admin/settings/keys${NC}"
+        echo ""
+        echo "2. Add your auth key to .env:"
+        echo -e "   ${BLUE}TAILSCALE_AUTHKEY=tskey-auth-xxxxx${NC}"
+        echo ""
+        echo "3. Start Stoat with Tailscale compose file:"
+        echo -e "   ${BLUE}docker compose -f unraid/docker-compose.tailscale.yml up -d${NC}"
+        echo ""
+        echo "4. Access your instance via Tailscale at:"
+        echo -e "   ${BLUE}https://${DOMAIN}${NC}"
+    else
+        echo -e "HTTP Port:     ${BLUE}${HTTP_PORT}${NC}"
+        echo -e "HTTPS Port:    ${BLUE}${HTTPS_PORT}${NC}"
+        echo ""
+        echo -e "${YELLOW}Next Steps:${NC}"
+        echo ""
+        echo "1. Ensure your domain DNS points to this server"
+        echo ""
+        echo "2. Start Stoat in foreground to verify:"
+        echo -e "   ${BLUE}docker compose -f unraid/docker-compose.yml up${NC}"
+        echo ""
+        echo "3. If everything works, run in background:"
+        echo -e "   ${BLUE}docker compose -f unraid/docker-compose.yml up -d${NC}"
+        echo ""
+        echo "4. Access your instance at:"
+        echo -e "   ${BLUE}https://${DOMAIN}${NC}"
+        echo ""
+        if [ "$BEHIND_PROXY" = true ]; then
+            echo -e "${YELLOW}Note:${NC} Configured for use behind a reverse proxy."
+            echo "      Make sure your proxy forwards to port ${HTTP_PORT}"
+            echo ""
+        fi
     fi
     echo -e "${GREEN}═══════════════════════════════════════════════════════════════════${NC}"
 }
@@ -332,6 +372,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --behind-proxy)
             BEHIND_PROXY=true
+            shift
+            ;;
+        --tailscale)
+            USE_TAILSCALE=true
             shift
             ;;
         -*)
