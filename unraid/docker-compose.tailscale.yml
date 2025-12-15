@@ -15,7 +15,8 @@ name: stoat
 #    - Enable "Ephemeral" if you want the node to auto-remove when stopped
 # 2. Run: ./unraid/setup-unraid.sh stoat.your-tailnet.ts.net --tailscale
 # 3. Edit unraid/.env and set: TAILSCALE_AUTHKEY=tskey-auth-xxxxx
-# 4. Start: docker compose -f unraid/docker-compose.tailscale.yml up -d
+# 4. Start: docker compose up -d
+# 5. Run: ./tailscale-setup.sh
 #
 # SHARING:
 # - Go to https://login.tailscale.com/admin/machines
@@ -26,9 +27,8 @@ name: stoat
 
 services:
   # ---------------------------------------------------------------------------
-  # Tailscale: Isolated network endpoint for Stoat
-  # This container gets its OWN Tailscale identity separate from Unraid
-  # Forwards HTTPS traffic to Caddy on the internal network
+  # Tailscale + Caddy: Combined container for Tailscale Serve
+  # Caddy runs in Tailscale's network namespace so Serve can proxy to localhost
   # ---------------------------------------------------------------------------
   tailscale:
     image: tailscale/tailscale:latest
@@ -39,7 +39,6 @@ services:
       - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
       - TS_STATE_DIR=/var/lib/tailscale
       - TS_USERSPACE=false
-      # Prevent this container from accessing other Tailscale nodes
       - TS_EXTRA_ARGS=--accept-routes=false
     volumes:
       - ${APPDATA_PATH:-/mnt/user/appdata}/stoat/tailscale:/var/lib/tailscale
@@ -48,12 +47,38 @@ services:
       - SYS_MODULE
     devices:
       - /dev/net/tun:/dev/net/tun
-    # Connect to both networks so it can reach Caddy
     networks:
       - default
     labels:
       net.unraid.docker.managed: "composeman"
       net.unraid.docker.icon: "https://tailscale.com/files/favicon-32x32.png"
+
+  # Caddy shares Tailscale's network so Tailscale Serve can proxy to localhost:80
+  # Since Caddy is in Tailscale's network namespace, it can't use Docker DNS
+  # We use extra_hosts to map service names to the Docker gateway, and services
+  # expose their ports so Caddy can reach them
+  caddy:
+    image: docker.io/caddy:latest
+    container_name: stoat-caddy
+    restart: unless-stopped
+    network_mode: "service:tailscale"
+    depends_on:
+      - tailscale
+      - api
+      - events
+      - web
+      - autumn
+      - january
+      - gifbox
+    environment:
+      - HOSTNAME=:80
+      - REVOLT_PUBLIC_URL=https://${TAILSCALE_HOSTNAME:-stoat}/api
+    volumes:
+      - ./Caddyfile.tailscale:/etc/caddy/Caddyfile:ro
+      - ${APPDATA_PATH:-/mnt/user/appdata}/stoat/caddy-data:/data
+      - ${APPDATA_PATH:-/mnt/user/appdata}/stoat/caddy-config:/config
+    labels:
+      net.unraid.docker.managed: "composeman"
 
   # ---------------------------------------------------------------------------
   # MongoDB: Primary Database
@@ -70,6 +95,10 @@ services:
       timeout: 10s
       retries: 5
       start_period: 10s
+    networks:
+      default:
+        aliases:
+          - database
     labels:
       net.unraid.docker.managed: "composeman"
 
@@ -82,6 +111,10 @@ services:
     restart: unless-stopped
     volumes:
       - ${APPDATA_PATH:-/mnt/user/appdata}/stoat/redis:/data
+    networks:
+      default:
+        aliases:
+          - redis
     labels:
       net.unraid.docker.managed: "composeman"
 
@@ -103,6 +136,10 @@ services:
       timeout: 10s
       retries: 3
       start_period: 20s
+    networks:
+      default:
+        aliases:
+          - rabbit
     labels:
       net.unraid.docker.managed: "composeman"
 
@@ -122,6 +159,7 @@ services:
     networks:
       default:
         aliases:
+          - minio
           - revolt-uploads.minio
           - attachments.minio
           - avatars.minio
@@ -130,23 +168,6 @@ services:
           - banners.minio
           - emojis.minio
     restart: unless-stopped
-    labels:
-      net.unraid.docker.managed: "composeman"
-
-  # ---------------------------------------------------------------------------
-  # Caddy: Reverse proxy / Web server
-  # No public ports - only accessible via Tailscale
-  # ---------------------------------------------------------------------------
-  caddy:
-    image: docker.io/caddy:latest
-    container_name: stoat-caddy
-    restart: unless-stopped
-    env_file: .env.web
-    # No ports exposed to host - Tailscale handles external access
-    volumes:
-      - ./Caddyfile.tailscale:/etc/caddy/Caddyfile:ro
-      - ${APPDATA_PATH:-/mnt/user/appdata}/stoat/caddy-data:/data
-      - ${APPDATA_PATH:-/mnt/user/appdata}/stoat/caddy-config:/config
     labels:
       net.unraid.docker.managed: "composeman"
 
@@ -166,6 +187,10 @@ services:
     volumes:
       - ./Revolt.toml:/Revolt.toml:ro
     restart: unless-stopped
+    networks:
+      default:
+        aliases:
+          - api
     labels:
       net.unraid.docker.managed: "composeman"
 
@@ -183,6 +208,10 @@ services:
     volumes:
       - ./Revolt.toml:/Revolt.toml:ro
     restart: unless-stopped
+    networks:
+      default:
+        aliases:
+          - events
     labels:
       net.unraid.docker.managed: "composeman"
 
@@ -193,7 +222,12 @@ services:
     image: ghcr.io/revoltchat/client:master
     container_name: stoat-web
     restart: unless-stopped
-    env_file: .env.web
+    environment:
+      - REVOLT_PUBLIC_URL=https://${TAILSCALE_HOSTNAME:-stoat}/api
+    networks:
+      default:
+        aliases:
+          - web
     labels:
       net.unraid.docker.managed: "composeman"
 
@@ -211,6 +245,10 @@ services:
     volumes:
       - ./Revolt.toml:/Revolt.toml:ro
     restart: unless-stopped
+    networks:
+      default:
+        aliases:
+          - autumn
     labels:
       net.unraid.docker.managed: "composeman"
 
@@ -223,6 +261,10 @@ services:
     volumes:
       - ./Revolt.toml:/Revolt.toml:ro
     restart: unless-stopped
+    networks:
+      default:
+        aliases:
+          - january
     labels:
       net.unraid.docker.managed: "composeman"
 
@@ -235,6 +277,10 @@ services:
     volumes:
       - ./Revolt.toml:/Revolt.toml:ro
     restart: unless-stopped
+    networks:
+      default:
+        aliases:
+          - gifbox
     labels:
       net.unraid.docker.managed: "composeman"
 
@@ -296,3 +342,7 @@ services:
       "
     labels:
       net.unraid.docker.managed: "composeman"
+
+networks:
+  default:
+    driver: bridge

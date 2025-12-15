@@ -50,18 +50,10 @@ echo -e "${GREEN}Tailscale connected!${NC}"
 TS_IP=$(docker exec stoat-tailscale tailscale ip -4)
 echo "Tailscale IP: ${TS_IP}"
 
-# Get the Caddy container IP on the docker network
-CADDY_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' stoat-caddy)
-echo "Caddy IP: ${CADDY_IP}"
-
-if [ -z "$CADDY_IP" ]; then
-    echo -e "${RED}Error: Could not get Caddy container IP${NC}"
-    exit 1
-fi
-
-# Configure Tailscale Serve to forward HTTPS to Caddy's container IP
-echo "Configuring Tailscale Serve to proxy to ${CADDY_IP}:80..."
-docker exec stoat-tailscale tailscale serve --bg --https=443 http://${CADDY_IP}:80
+# Since Caddy runs with network_mode: service:tailscale, it shares the same
+# network namespace. Caddy listens on port 80 which is localhost from Tailscale's perspective.
+echo "Configuring Tailscale Serve to proxy to localhost:80 (Caddy in same network namespace)..."
+docker exec stoat-tailscale tailscale serve --bg --https=443 http://localhost:80
 
 # Verify serve is running
 echo ""
