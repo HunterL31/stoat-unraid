@@ -35,8 +35,8 @@ git clone https://github.com/YOUR_USERNAME/stoat-unraid.git /mnt/user/appdata/st
 cd /mnt/user/appdata/stoat
 
 # Run the setup script (replace with YOUR domain)
-chmod +x unraid/setup-unraid.sh
-./unraid/setup-unraid.sh chat.yourdomain.com
+chmod +x setup-unraid.sh
+./setup-unraid.sh chat.yourdomain.com
 
 # Exit SSH
 exit
@@ -53,7 +53,7 @@ exit
 3. Click **Add New Stack**
 4. Configure:
    - **Name**: `stoat`
-   - **Compose File**: `/mnt/user/appdata/stoat/unraid/docker-compose.yml`
+   - **Compose File**: `/mnt/user/appdata/stoat/docker-compose.yml`
 5. Click **Save**
 
 ---
@@ -110,11 +110,11 @@ git clone https://github.com/YOUR_USERNAME/stoat-unraid.git /mnt/user/appdata/st
 cd /mnt/user/appdata/stoat
 
 # Run setup with Tailscale flag
-chmod +x unraid/setup-unraid.sh
-./unraid/setup-unraid.sh stoat --tailscale
+chmod +x setup-unraid.sh
+./setup-unraid.sh stoat --tailscale
 
 # Add your Tailscale auth key
-nano unraid/.env
+nano .env
 # Find TAILSCALE_AUTHKEY= and paste your key
 
 # Exit SSH
@@ -132,7 +132,7 @@ exit
 3. Click **Add New Stack**
 4. Configure:
    - **Name**: `stoat`
-   - **Compose File**: `/mnt/user/appdata/stoat/unraid/docker-compose.tailscale.yml`
+   - **Compose File**: `/mnt/user/appdata/stoat/docker-compose.yml`
 5. Click **Save**
 
 > ⚠️ **Important:** Use `docker-compose.tailscale.yml` not `docker-compose.yml`
@@ -227,11 +227,11 @@ After pulling updates via SSH:
 2. SSH in and run:
    ```bash
    cd /mnt/user/appdata/stoat
-   ./unraid/setup-unraid.sh stoat --tailscale
-   # Add your TAILSCALE_AUTHKEY to unraid/.env
+   ./setup-unraid.sh stoat --tailscale
+   # Add your TAILSCALE_AUTHKEY to .env
    ```
 3. In Compose Manager, edit the stack:
-   - Change compose file to: `/mnt/user/appdata/stoat/unraid/docker-compose.tailscale.yml`
+   - Change compose file to: `/mnt/user/appdata/stoat/docker-compose.yml`
 4. Start the stack
 
 ### From Tailscale to Standard
@@ -240,10 +240,10 @@ After pulling updates via SSH:
 2. SSH in and run:
    ```bash
    cd /mnt/user/appdata/stoat
-   ./unraid/setup-unraid.sh your.domain.com
+   ./setup-unraid.sh your.domain.com
    ```
 3. Edit the stack:
-   - Change compose file to: `/mnt/user/appdata/stoat/unraid/docker-compose.yml`
+   - Change compose file to: `/mnt/user/appdata/stoat/docker-compose.yml`
 4. Start the stack
 
 ---
@@ -275,10 +275,10 @@ ssh root@YOUR-UNRAID-IP
 cd /mnt/user/appdata/stoat
 
 # For standard:
-./unraid/setup-unraid.sh new.domain.com
+./setup-unraid.sh new.domain.com
 
 # For Tailscale:
-./unraid/setup-unraid.sh new-hostname --tailscale
+./setup-unraid.sh new-hostname --tailscale
 ```
 
 Then restart the stack from the GUI.

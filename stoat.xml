@@ -36,7 +36,7 @@
   </Overview>
   <Category>Network:Chat Productivity:</Category>
   <WebUI>https://[STOAT_DOMAIN]</WebUI>
-  <TemplateURL>https://raw.githubusercontent.com/revoltchat/self-hosted/master/unraid/stoat.xml</TemplateURL>
+  <TemplateURL>https://raw.githubusercontent.com/YOUR_USERNAME/stoat-unraid/main/stoat.xml</TemplateURL>
   <Icon>https://raw.githubusercontent.com/revoltchat/revoltchat-solid/master/public/assets/icons/android-chrome-512x512.png</Icon>
   <ExtraParams/>
   <PostArgs/>

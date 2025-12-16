@@ -39,8 +39,8 @@ git clone https://github.com/YOUR_USERNAME/stoat-unraid.git /mnt/user/appdata/st
 cd /mnt/user/appdata/stoat
 
 # Run setup with Tailscale flag
-chmod +x unraid/setup-unraid.sh
-./unraid/setup-unraid.sh stoat --tailscale
+chmod +x setup-unraid.sh
+./setup-unraid.sh stoat --tailscale
 ```
 
 > **Note:** The hostname `stoat` will become `stoat.your-tailnet.ts.net`
@@ -50,7 +50,7 @@ chmod +x unraid/setup-unraid.sh
 Edit the generated `.env` file:
 
 ```bash
-nano unraid/.env
+nano .env
 ```
 
 Find this line and replace with your actual key:
@@ -61,7 +61,7 @@ TAILSCALE_AUTHKEY=tskey-auth-REPLACE_WITH_YOUR_KEY
 ### Step 4: Start Stoat
 
 ```bash
-docker compose -f unraid/docker-compose.tailscale.yml up -d
+docker compose up -d
 ```
 
 ### Step 5: Verify It's Working
@@ -124,7 +124,7 @@ To make Stoat publicly accessible without requiring Tailscale:
 
 3. Restart the Tailscale container:
    ```bash
-   docker compose -f unraid/docker-compose.tailscale.yml restart tailscale
+   docker compose restart tailscale
    ```
 
 4. Stoat is now publicly accessible at `https://stoat.your-tailnet.ts.net`
@@ -188,14 +188,14 @@ To get a fresh Tailscale identity:
 
 ```bash
 # Stop containers
-docker compose -f unraid/docker-compose.tailscale.yml down
+docker compose down
 
 # Remove Tailscale state
 rm -rf /mnt/user/appdata/stoat/tailscale/*
 
 # Generate new auth key and update .env
 # Then restart
-docker compose -f unraid/docker-compose.tailscale.yml up -d
+docker compose up -d
 ```
 
 ---

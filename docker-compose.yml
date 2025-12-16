@@ -13,8 +13,8 @@ name: stoat
 # 1. Get a Tailscale auth key from https://login.tailscale.com/admin/settings/keys
 #    - Use a reusable key if you want the container to reconnect after restarts
 #    - Enable "Ephemeral" if you want the node to auto-remove when stopped
-# 2. Run: ./unraid/setup-unraid.sh stoat.your-tailnet.ts.net --tailscale
-# 3. Edit unraid/.env and set: TAILSCALE_AUTHKEY=tskey-auth-xxxxx
+# 2. Run: ./setup-unraid.sh stoat.your-tailnet.ts.net --tailscale
+# 3. Edit .env and set: TAILSCALE_AUTHKEY=tskey-auth-xxxxx
 # 4. Start: docker compose up -d
 # 5. Run: ./tailscale-setup.sh
 #

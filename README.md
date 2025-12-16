@@ -1,18 +1,28 @@
 <div align="center">
-<h1>Stoat Self-Hosted (Unraid Edition)</h1>
+<h1>Stoat Self-Hosted (Unraid + Tailscale Edition)</h1>
 
-**Self-hosting Stoat Chat on Unraid using Docker Compose**
+**Self-hosting Stoat Chat on Unraid with Tailscale support**
 
-*Forked from [stoatchat/self-hosted](https://github.com/stoatchat/self-hosted) with Unraid-specific templates and setup scripts.*
+*Forked from [stoatchat/self-hosted](https://github.com/stoatchat/self-hosted) with Unraid-optimized setup and Tailscale integration.*
 
 </div>
 <br/>
 
 ---
 
-## 🎮 Unraid Quick Start
+## 🎯 Why This Fork?
 
-**See the [Unraid Installation Guide](./unraid/README.md) for complete instructions.**
+This fork is specifically designed for **Unraid** users who want to:
+- 🔐 **Share securely with Tailscale** - Give friends access to your chat without exposing your server
+- 🚀 **Easy setup** - Automated configuration scripts for Unraid
+- 📦 **Unraid-optimized** - Proper appdata paths, container labels, and compose file structure
+- 🎮 **Two deployment modes** - Public domain OR private Tailscale network
+
+---
+
+## 🎮 Quick Start
+
+### Option 1: Tailscale (Recommended for sharing with friends)
 
 ```bash
 # SSH into Unraid
@@ -21,16 +31,60 @@ ssh root@your-unraid-ip
 # Setup
 mkdir -p /mnt/user/appdata/stoat && cd /mnt/user/appdata/stoat
 git clone https://github.com/YOUR_USERNAME/stoat-unraid.git .
-chmod +x unraid/setup-unraid.sh
-./unraid/setup-unraid.sh your.domain.com
+chmod +x setup-unraid.sh
+./setup-unraid.sh stoat --tailscale
+
+# Edit .env and add your Tailscale auth key
+nano .env
 
 # Start
-docker compose -f unraid/docker-compose.yml up -d
+docker compose up -d
+
+# Configure Tailscale Serve
+./tailscale-setup.sh
 ```
+
+**[Full Tailscale Setup Guide →](./TAILSCALE-SETUP.md)**
+
+### Option 2: Public Domain
+
+```bash
+# SSH into Unraid
+ssh root@your-unraid-ip
+
+# Setup
+mkdir -p /mnt/user/appdata/stoat && cd /mnt/user/appdata/stoat
+git clone https://github.com/YOUR_USERNAME/stoat-unraid.git .
+chmod +x setup-unraid.sh
+./setup-unraid.sh your.domain.com
+
+# Start
+docker compose up -d
+```
+
+**[Full Unraid Setup Guide →](./UNRAID-README.md)**
 
 ---
 
-## Original Documentation
+## 📚 Documentation
+
+- **[Unraid Installation Guide](./UNRAID-README.md)** - Standard setup with public domain
+- **[Tailscale Setup Guide](./TAILSCALE-SETUP.md)** - Secure private network setup
+- **[Unraid GUI Installation](./UNRAID-GUI-INSTALL.md)** - Using Unraid's Docker Compose GUI
+
+---
+
+## 🔧 What's Different from Upstream?
+
+1. **Tailscale integration** - Built-in support for Tailscale Serve
+2. **Unraid-specific paths** - Uses `/mnt/user/appdata` by default
+3. **Container labels** - Proper Unraid Docker labels for management
+4. **Setup scripts** - Automated configuration for both deployment modes
+5. **Single compose file** - One `docker-compose.yml` that works for both modes
+
+---
+
+## Original Upstream Documentation
 
 
 This repository contains configurations and instructions that can be used for deploying a full instance of Stoat, including the back-end, web front-end, file server, and metadata and image proxy.

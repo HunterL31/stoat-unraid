@@ -1,4 +1,8 @@
-{$HOSTNAME} {
+# Caddyfile for Tailscale setup
+# Tailscale Serve handles HTTPS termination, so Caddy just listens on HTTP
+# This is accessed via: tailscale serve --bg 443 http://caddy:80
+
+:80 {
 	route /api* {
 		uri strip_prefix /api
 		reverse_proxy http://api:14702 {
@@ -36,3 +40,4 @@
 
 	reverse_proxy http://web:5000
 }
+

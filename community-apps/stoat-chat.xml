@@ -24,10 +24,7 @@ Stoat (formerly Revolt) is a self-hosted, open-source chat platform - a privacy-
 
    mkdir -p /mnt/user/appdata/stoat
    cd /mnt/user/appdata/stoat
-   git clone https://github.com/revoltchat/self-hosted.git temp
-   cp -r temp/unraid/* .
-   cp temp/Caddyfile .
-   rm -rf temp
+   git clone https://github.com/YOUR_USERNAME/stoat-unraid.git .
    chmod +x setup-unraid.sh
    ./setup-unraid.sh YOUR.DOMAIN.COM
 
@@ -51,7 +48,7 @@ Stoat (formerly Revolt) is a self-hosted, open-source chat platform - a privacy-
   </Overview>
   <Category>Network:Chat Productivity: Tools:Utilities</Category>
   <WebUI>https://[STOAT_DOMAIN]</WebUI>
-  <TemplateURL>https://raw.githubusercontent.com/revoltchat/self-hosted/master/unraid/community-apps/stoat-chat.xml</TemplateURL>
+  <TemplateURL>https://raw.githubusercontent.com/YOUR_USERNAME/stoat-unraid/main/community-apps/stoat-chat.xml</TemplateURL>
   <Icon>https://raw.githubusercontent.com/revoltchat/revoltchat-solid/master/public/assets/icons/android-chrome-512x512.png</Icon>
   <ExtraParams>--network=stoat_default</ExtraParams>
   <PostArgs/>

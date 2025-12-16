@@ -65,18 +65,18 @@ cd /mnt/user/appdata/stoat
 ### 3. Run the setup script
 
 ```bash
-chmod +x unraid/setup-unraid.sh
-./unraid/setup-unraid.sh your.domain.com
+chmod +x setup-unraid.sh
+./setup-unraid.sh your.domain.com
 ```
 
 ### 4. Start Stoat
 
 ```bash
 # Test in foreground first
-docker compose -f unraid/docker-compose.yml up
+docker compose up
 
 # If everything works, run in background
-docker compose -f unraid/docker-compose.yml up -d
+docker compose up -d
 ```
 
 ### 5. Access your instance
@@ -90,7 +90,7 @@ Open `https://your.domain.com` in your browser!
 ### Setup Script Options
 
 ```bash
-./unraid/setup-unraid.sh <domain> [options]
+./setup-unraid.sh <domain> [options]
 
 Options:
   --appdata PATH      Custom appdata path (default: /mnt/user/appdata)
@@ -104,16 +104,16 @@ Options:
 
 ```bash
 # Basic setup
-./unraid/setup-unraid.sh chat.example.com
+./setup-unraid.sh chat.example.com
 
 # Custom appdata location
-./unraid/setup-unraid.sh chat.example.com --appdata /mnt/cache/appdata
+./setup-unraid.sh chat.example.com --appdata /mnt/cache/appdata
 
 # Behind SWAG/Nginx Proxy Manager
-./unraid/setup-unraid.sh chat.example.com --behind-proxy --http-port 8080
+./setup-unraid.sh chat.example.com --behind-proxy --http-port 8080
 
 # Custom ports
-./unraid/setup-unraid.sh chat.example.com --http-port 8080 --https-port 8443
+./setup-unraid.sh chat.example.com --http-port 8080 --https-port 8443
 ```
 
 ---
@@ -125,7 +125,7 @@ If you're already using SWAG, Nginx Proxy Manager, or another reverse proxy:
 ### 1. Run setup with `--behind-proxy` flag
 
 ```bash
-./unraid/setup-unraid.sh chat.example.com --behind-proxy --http-port 8080
+./setup-unraid.sh chat.example.com --behind-proxy --http-port 8080
 ```
 
 ### 2. Configure your reverse proxy
@@ -176,15 +176,17 @@ After setup, your appdata folder will look like:
 
 ```
 /mnt/user/appdata/stoat/
-├── unraid/
-│   ├── docker-compose.yml  # Unraid-optimized compose file
-│   ├── setup-unraid.sh     # Setup script
-│   ├── Caddyfile           # Caddy reverse proxy config
-│   ├── Revolt.toml         # Stoat configuration (generated)
-│   ├── .env                # Environment variables (generated)
-│   └── .env.web            # Web client config (generated)
-├── compose.yml             # Original compose file (not used)
+├── docker-compose.yml      # Main compose file
+├── setup-unraid.sh         # Setup script
+├── tailscale-setup.sh      # Tailscale configuration script
+├── Caddyfile               # Caddy reverse proxy config
+├── Caddyfile.tailscale     # Caddy config for Tailscale mode
+├── Revolt.toml             # Stoat configuration (generated)
+├── .env                    # Environment variables (generated)
+├── .env.web                # Web client config (generated)
 ├── README.md               # Main documentation
+├── UNRAID-README.md        # Unraid-specific guide
+├── TAILSCALE-SETUP.md      # Tailscale setup guide
 ├── mongodb/                # MongoDB data
 ├── redis/                  # Redis/KeyDB data
 ├── rabbitmq/               # RabbitMQ data
@@ -223,19 +225,19 @@ After setup, your appdata folder will look like:
 cd /mnt/user/appdata/stoat
 
 # All services
-docker compose -f unraid/docker-compose.yml logs -f
+docker compose logs -f
 
 # Specific service
-docker compose -f unraid/docker-compose.yml logs -f api
+docker compose logs -f api
 ```
 
 ### Restart services
 
 ```bash
-docker compose -f unraid/docker-compose.yml restart
+docker compose restart
 
 # Specific service
-docker compose -f unraid/docker-compose.yml restart api
+docker compose restart api
 ```
 
 ### Update to latest version
@@ -247,14 +249,14 @@ cd /mnt/user/appdata/stoat
 git pull
 
 # Pull latest Docker images
-docker compose -f unraid/docker-compose.yml pull
-docker compose -f unraid/docker-compose.yml up -d
+docker compose pull
+docker compose up -d
 ```
 
 ### Stop all services
 
 ```bash
-docker compose -f unraid/docker-compose.yml down
+docker compose down
 ```
 
 ### Backup data
@@ -263,13 +265,13 @@ docker compose -f unraid/docker-compose.yml down
 cd /mnt/user/appdata/stoat
 
 # Stop services first for consistent backup
-docker compose -f unraid/docker-compose.yml down
+docker compose down
 
 # Backup the entire stoat folder
 tar -czvf stoat-backup-$(date +%Y%m%d).tar.gz /mnt/user/appdata/stoat
 
 # Restart services
-docker compose -f unraid/docker-compose.yml up -d
+docker compose up -d
 ```
 
 ---
@@ -278,7 +280,7 @@ docker compose -f unraid/docker-compose.yml up -d
 
 ### Making Your Instance Invite-Only
 
-1. Edit `unraid/Revolt.toml` and add:
+1. Edit `Revolt.toml` and add:
 
 ```toml
 [general]
@@ -288,7 +290,7 @@ invite_only = true
 2. Create an invite code:
 
 ```bash
-docker compose -f unraid/docker-compose.yml exec database mongosh
+docker compose exec database mongosh
 
 # In mongo shell:
 use revolt
@@ -298,12 +300,12 @@ db.invites.insertOne({ _id: "your_invite_code_here" })
 3. Restart services:
 
 ```bash
-docker compose -f unraid/docker-compose.yml restart api
+docker compose restart api
 ```
 
 ### Custom Configuration
 
-Edit `unraid/Revolt.toml` for advanced settings. See the [full configuration reference](https://github.com/revoltchat/backend/blob/stable/crates/core/config/Revolt.toml).
+Edit `Revolt.toml` for advanced settings. See the [full configuration reference](https://github.com/revoltchat/backend/blob/stable/crates/core/config/Revolt.toml).
 
 Notable options:
 - Email verification
@@ -319,10 +321,10 @@ Notable options:
 
 ```bash
 # Check for errors
-docker compose -f unraid/docker-compose.yml logs
+docker compose logs
 
 # Verify all images are pulled
-docker compose -f unraid/docker-compose.yml pull
+docker compose pull
 
 # Check disk space
 df -h /mnt/user/appdata
@@ -331,7 +333,7 @@ df -h /mnt/user/appdata
 ### Can't access the web interface
 
 1. Verify DNS is pointing to your server
-2. Check Caddy logs: `docker compose -f unraid/docker-compose.yml logs caddy`
+2. Check Caddy logs: `docker compose logs caddy`
 3. Ensure ports 80/443 aren't blocked
 4. Check firewall settings in Unraid
 
@@ -339,10 +341,10 @@ df -h /mnt/user/appdata
 
 ```bash
 # Check MongoDB status
-docker compose -f unraid/docker-compose.yml logs database
+docker compose logs database
 
 # Verify health check
-docker compose -f unraid/docker-compose.yml ps
+docker compose ps
 ```
 
 ### WebSocket connection failed
@@ -355,10 +357,10 @@ docker compose -f unraid/docker-compose.yml ps
 
 ```bash
 cd /mnt/user/appdata/stoat
-docker compose -f unraid/docker-compose.yml down -v
+docker compose down -v
 rm -rf mongodb redis rabbitmq minio caddy-data caddy-config
-./unraid/setup-unraid.sh your.domain.com
-docker compose -f unraid/docker-compose.yml up -d
+./setup-unraid.sh your.domain.com
+docker compose up -d
 ```
 
 ---
