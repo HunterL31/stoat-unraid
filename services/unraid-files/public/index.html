@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unraid Files - Browse & Share</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #ff6b6b;
+            margin-bottom: 10px;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #242424;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .breadcrumb a {
+            color: #ff6b6b;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+
+        .breadcrumb a:hover {
+            opacity: 0.7;
+        }
+
+        .breadcrumb .separator {
+            color: #666;
+        }
+
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: #242424;
+            border-radius: 8px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .file-item:hover {
+            background: #2a2a2a;
+            transform: translateX(4px);
+        }
+
+        .file-icon {
+            font-size: 24px;
+            width: 32px;
+            text-align: center;
+        }
+
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-meta {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #ff5252;
+        }
+
+        .btn-secondary {
+            background: #333;
+            color: #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: #404040;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+
+        .error {
+            background: #4a1f1f;
+            color: #ff6b6b;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #242424;
+            padding: 24px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #ff6b6b;
+        }
+
+        .link-input {
+            width: 100%;
+            padding: 12px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .format-selector {
+            background: #1a1a1a;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .format-selector label {
+            display: block;
+            margin-bottom: 8px;
+            color: #888;
+        }
+
+        .format-options {
+            display: flex;
+            gap: 12px;
+        }
+
+        .format-option {
+            flex: 1;
+            padding: 12px;
+            background: #242424;
+            border: 2px solid #333;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .format-option:hover {
+            border-color: #ff6b6b;
+        }
+
+        .format-option.active {
+            background: #ff6b6b;
+            border-color: #ff6b6b;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📁 Unraid Files</h1>
+            <p>Browse and share files from your Unraid array</p>
+        </header>
+
+        <div class="breadcrumb" id="breadcrumb"></div>
+        
+        <div id="error" class="error" style="display: none;"></div>
+        
+        <div id="loading" class="loading">Loading...</div>
+        
+        <div id="file-list" class="file-list"></div>
+    </div>
+
+    <div id="link-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📎 Share File</h2>
+                <p id="file-name-display"></p>
+            </div>
+
+            <div class="format-selector">
+                <label>Link Format:</label>
+                <div class="format-options">
+                    <div class="format-option active" data-format="plain" title="Direct URL">
+                        Plain URL
+                    </div>
+                    <div class="format-option" data-format="markdown" title="Markdown link">
+                        Markdown
+                    </div>
+                    <div class="format-option" data-format="html" title="HTML anchor tag">
+                        HTML
+                    </div>
+                </div>
+            </div>
+
+            <input type="text" id="link-text" class="link-input" readonly>
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeLinkModal()">Close</button>
+                <button class="btn btn-primary" onclick="copyLink()">Copy Link</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin + '/api';
+        let currentPath = '/';
+        let currentFileLink = null;
+        let currentFileName = null;
+        let selectedFormat = 'plain';
+
+        async function loadDirectory(path = '/') {
+            currentPath = path;
+            showLoading();
+            hideError();
+
+            try {
+                const response = await fetch(`${API_BASE}/browse?path=${encodeURIComponent(path)}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to load directory');
+                }
+
+                renderBreadcrumb(data.currentPath, data.parentPath);
+                renderFileList(data.items);
+                hideLoading();
+            } catch (error) {
+                showError(error.message);
+                hideLoading();
+            }
+        }
+
+        function renderBreadcrumb(currentPath, parentPath) {
+            const breadcrumb = document.getElementById('breadcrumb');
+            const parts = currentPath.split('/').filter(p => p);
+            
+            let html = '<a href="#" onclick="loadDirectory(\'/\'); return false;">🏠 Home</a>';
+            
+            let accumulatedPath = '';
+            for (const part of parts) {
+                accumulatedPath += '/' + part;
+                const pathToUse = accumulatedPath;
+                html += '<span class="separator">/</span>';
+                html += `<a href="#" onclick="loadDirectory('${pathToUse}'); return false;">${part}</a>`;
+            }
+
+            breadcrumb.innerHTML = html;
+        }
+
+        function renderFileList(items) {
+            const fileList = document.getElementById('file-list');
+            
+            if (items.length === 0) {
+                fileList.innerHTML = '<div class="loading">This folder is empty</div>';
+                return;
+            }
+
+            fileList.innerHTML = items.map(item => {
+                const icon = item.isDirectory ? '📁' : getFileIcon(item.name);
+                const size = item.isDirectory ? '' : formatSize(item.size);
+                const date = new Date(item.modified).toLocaleDateString();
+
+                if (item.isDirectory) {
+                    return `
+                        <div class="file-item" onclick="loadDirectory('${item.path}')">
+                            <div class="file-icon">${icon}</div>
+                            <div class="file-info">
+                                <div class="file-name">${item.name}</div>
+                                <div class="file-meta">${date}</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="file-item">
+                            <div class="file-icon">${icon}</div>
+                            <div class="file-info">
+                                <div class="file-name">${item.name}</div>
+                                <div class="file-meta">${size} • ${date}</div>
+                            </div>
+                            <div class="file-actions">
+                                <button class="btn btn-secondary" onclick="viewFile('${item.path}'); event.stopPropagation();">
+                                    View
+                                </button>
+                                <button class="btn btn-primary" onclick="shareFile('${item.path}', '${item.name}'); event.stopPropagation();">
+                                    Share
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            }).join('');
+        }
+
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const iconMap = {
+                'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️', 'gif': '🖼️', 'webp': '🖼️',
+                'mp4': '🎬', 'mkv': '🎬', 'avi': '🎬', 'mov': '🎬',
+                'mp3': '🎵', 'flac': '🎵', 'wav': '🎵', 'm4a': '🎵',
+                'pdf': '📄',
+                'zip': '📦', 'rar': '📦', '7z': '📦', 'tar': '📦', 'gz': '📦',
+                'txt': '📝', 'md': '📝',
+                'iso': '💿',
+            };
+            return iconMap[ext] || '📄';
+        }
+
+        function formatSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        async function shareFile(path, name) {
+            try {
+                const response = await fetch(`${API_BASE}/link`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ path }),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to generate link');
+                }
+
+                currentFileLink = data.url;
+                currentFileName = name;
+                showLinkModal();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        function viewFile(path) {
+            const url = `${window.location.origin}/files${path}`;
+            window.open(url, '_blank');
+        }
+
+        function showLinkModal() {
+            const modal = document.getElementById('link-modal');
+            const fileNameDisplay = document.getElementById('file-name-display');
+            
+            fileNameDisplay.textContent = currentFileName;
+            updateLinkText();
+            
+            modal.classList.add('active');
+        }
+
+        function closeLinkModal() {
+            const modal = document.getElementById('link-modal');
+            modal.classList.remove('active');
+        }
+
+        function updateLinkText() {
+            const linkText = document.getElementById('link-text');
+            
+            switch(selectedFormat) {
+                case 'plain':
+                    linkText.value = currentFileLink;
+                    break;
+                case 'markdown':
+                    linkText.value = `[${currentFileName}](${currentFileLink})`;
+                    break;
+                case 'html':
+                    linkText.value = `<a href="${currentFileLink}">${currentFileName}</a>`;
+                    break;
+            }
+        }
+
+        function copyLink() {
+            const linkText = document.getElementById('link-text');
+            linkText.select();
+            document.execCommand('copy');
+            
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Copied!';
+            setTimeout(() => {
+                btn.textContent = originalText;
+            }, 2000);
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('file-list').style.display = 'none';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('file-list').style.display = 'flex';
+        }
+
+        function showError(message) {
+            const error = document.getElementById('error');
+            error.textContent = message;
+            error.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+
+        // Format selector
+        document.querySelectorAll('.format-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.format-option').forEach(o => o.classList.remove('active'));
+                option.classList.add('active');
+                selectedFormat = option.dataset.format;
+                updateLinkText();
+            });
+        });
+
+        // Close modal on backdrop click
+        document.getElementById('link-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'link-modal') {
+                closeLinkModal();
+            }
+        });
+
+        // Load initial directory
+        loadDirectory('/');
+    </script>
+</body>
+</html>
+

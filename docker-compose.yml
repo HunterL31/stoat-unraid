@@ -70,6 +70,7 @@ services:
       - autumn
       - january
       - gifbox
+      - unraid-files
     environment:
       - HOSTNAME=:80
       - REVOLT_PUBLIC_URL=https://${TAILSCALE_HOSTNAME:-stoat}/api
@@ -319,6 +320,32 @@ services:
     restart: unless-stopped
     labels:
       net.unraid.docker.managed: "composeman"
+
+  # ---------------------------------------------------------------------------
+  # Unraid Files: Browse and link files from Unraid array shares
+  # ---------------------------------------------------------------------------
+  unraid-files:
+    build: ./services/unraid-files
+    container_name: stoat-unraid-files
+    restart: unless-stopped
+    environment:
+      - PORT=3030
+      - UNRAID_MOUNT_PATH=/unraid-shares
+      - BASE_URL=https://${TAILSCALE_HOSTNAME:-stoat}/unraid
+    volumes:
+      # Mount Unraid shares you want to access from Stoat
+      # Examples (uncomment and modify as needed):
+      # - /mnt/user/Media:/unraid-shares/Media:ro
+      # - /mnt/user/Documents:/unraid-shares/Documents:ro
+      # - /mnt/user/Downloads:/unraid-shares/Downloads:ro
+      - ${UNRAID_SHARE_PATH:-/mnt/user}:${UNRAID_SHARE_MOUNT:-/unraid-shares}:ro
+    networks:
+      default:
+        aliases:
+          - unraid-files
+    labels:
+      net.unraid.docker.managed: "composeman"
+      net.unraid.docker.icon: "https://raw.githubusercontent.com/Squidly271/CA-Templates/master/templates/img/unraid.png"
 
   # ---------------------------------------------------------------------------
   # Create Buckets: One-time initialization for MinIO

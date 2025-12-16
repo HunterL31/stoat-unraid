@@ -1,0 +1,17 @@
+{
+  "name": "stoat-unraid-files",
+  "version": "1.0.0",
+  "description": "File browser and link generator for Unraid array integration with Stoat",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "mime-types": "^2.1.35"
+  }
+}
+

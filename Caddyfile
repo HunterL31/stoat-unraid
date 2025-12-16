@@ -38,6 +38,13 @@
 		}
 	}
 
+	route /unraid* {
+		uri strip_prefix /unraid
+		reverse_proxy http://unraid-files:3030 {
+			header_down Location "^/" "/unraid/"
+		}
+	}
+
 	reverse_proxy http://web:5000
 }
 

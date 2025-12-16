@@ -17,6 +17,7 @@ This fork is specifically designed for **Unraid** users who want to:
 - 🚀 **Easy setup** - Automated configuration scripts for Unraid
 - 📦 **Unraid-optimized** - Proper appdata paths, container labels, and compose file structure
 - 🎮 **Two deployment modes** - Public domain OR private Tailscale network
+- 📁 **Unraid Array File Linking** - Browse and share files from your Unraid array directly in chat
 
 ---
 
@@ -71,6 +72,8 @@ docker compose up -d
 - **[Unraid Installation Guide](./UNRAID-README.md)** - Standard setup with public domain
 - **[Tailscale Setup Guide](./TAILSCALE-SETUP.md)** - Secure private network setup
 - **[Unraid GUI Installation](./UNRAID-GUI-INSTALL.md)** - Using Unraid's Docker Compose GUI
+- **[📁 Unraid Files Feature](./UNRAID-FILES-FEATURE.md)** - Browse and share files from your Unraid array
+  - **[Quick Start Guide](./QUICKSTART-UNRAID-FILES.md)** - Get started in 5 minutes
 
 ---
 
@@ -81,6 +84,7 @@ docker compose up -d
 3. **Container labels** - Proper Unraid Docker labels for management
 4. **Setup scripts** - Automated configuration for both deployment modes
 5. **Single compose file** - One `docker-compose.yml` that works for both modes
+6. **Unraid array file linking** - Browse and share files directly from Unraid shares
 
 ---
 
