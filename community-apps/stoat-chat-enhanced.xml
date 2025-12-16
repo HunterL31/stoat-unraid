@@ -1,0 +1,254 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>Stoat-Chat</Name>
+  <Repository>ghcr.io/revoltchat/server:20250930-2</Repository>
+  <Registry>https://github.com/revoltchat/self-hosted</Registry>
+  <Branch>
+    <Tag>latest</Tag>
+    <TagDescription>Latest stable release</TagDescription>
+  </Branch>
+  <Network>bridge</Network>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/revoltchat/self-hosted/issues</Support>
+  <Project>https://revolt.chat</Project>
+  <Overview>
+Stoat (formerly Revolt) is a self-hosted, open-source chat platform - a privacy-focused alternative to Discord.
+
+⚠️ IMPORTANT: This template configures a DOCKER COMPOSE application with multiple containers.
+
+📋 DEPLOYMENT OPTIONS:
+Choose between two deployment modes:
+• 🌐 PUBLIC DOMAIN: Accessible from internet with your domain
+• 🔐 TAILSCALE: Private network access via Tailscale VPN
+
+📋 INSTALLATION STEPS:
+1. Install "Docker Compose Manager" from Community Apps
+2. Configure this template with your preferred settings
+3. The setup will automatically:
+   - Create the docker-compose.yml file
+   - Generate secure credentials
+   - Configure environment files
+   - Set up data directories
+
+✨ FEATURES:
+• Real-time messaging with WebSocket support
+• File uploads and attachments  
+• Image and link previews
+• GIF search via Tenor
+• Push notifications
+• Full API access
+• Multi-server deployment ready
+
+📋 REQUIREMENTS:
+• For PUBLIC: Domain name with DNS pointing to your server
+• For TAILSCALE: Tailscale account and auth key
+• 2GB+ RAM recommended
+• Docker Compose Manager plugin
+
+🔧 CONFIGURATION:
+This template provides comprehensive configuration options:
+• Deployment mode (Public Domain or Tailscale)
+• Data storage paths
+• Port configuration
+• Security settings
+• Advanced features (invite-only, GIF search, etc.)
+
+📖 Full documentation: https://github.com/YOUR_USERNAME/stoat-unraid
+  </Overview>
+  <Category>Network:Chat Productivity: Tools:Utilities</Category>
+  <WebUI>https://[STOAT_DOMAIN]</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/YOUR_USERNAME/stoat-unraid/main/community-apps/stoat-chat-enhanced.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/revoltchat/revoltchat-solid/master/public/assets/icons/android-chrome-512x512.png</Icon>
+  <ExtraParams>--network=stoat_default</ExtraParams>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled/>
+  <DonateText>Support Revolt/Stoat Development</DonateText>
+  <DonateLink>https://opencollective.com/revolt</DonateLink>
+  <Requires>
+Docker Compose Manager plugin is REQUIRED for this multi-container application.
+Install from Community Apps before proceeding.
+
+This template will create a complete docker-compose.yml setup in your appdata directory.
+  </Requires>
+
+  <!-- =============================================================== -->
+  <!-- BASIC CONFIGURATION -->
+  <!-- =============================================================== -->
+  
+  <Config Name="Deployment Mode" Target="DEPLOYMENT_MODE" Default="domain" Mode="" Description="Choose deployment mode: 'domain' for public access or 'tailscale' for private VPN access" Type="Variable" Display="always" Required="true" Mask="false">
+    <Option>domain:Public Domain</Option>
+    <Option>tailscale:Tailscale VPN</Option>
+  </Config>
+
+  <Config Name="Domain/Hostname" Target="STOAT_DOMAIN" Default="chat.example.com" Mode="" Description="For PUBLIC: Your domain (e.g., chat.example.com). For TAILSCALE: Your Tailscale hostname (e.g., stoat.tail1234.ts.net). DNS must point to this server for public domains." Type="Variable" Display="always" Required="true" Mask="false"/>
+
+  <Config Name="Appdata Path" Target="APPDATA_PATH" Default="/mnt/user/appdata/stoat" Mode="rw" Description="Main directory for Stoat configuration, compose files, and service data. All Stoat data will be stored here." Type="Path" Display="always" Required="true" Mask="false"/>
+
+  <!-- =============================================================== -->
+  <!-- PORT CONFIGURATION -->
+  <!-- =============================================================== -->
+
+  <Config Name="HTTP Port" Target="HTTP_PORT" Default="80" Mode="tcp" Description="HTTP port for web access. For Tailscale mode, this can be any available port since it won't be publicly exposed." Type="Port" Display="always" Required="true" Mask="false"/>
+
+  <Config Name="HTTPS Port" Target="HTTPS_PORT" Default="443" Mode="tcp" Description="HTTPS port for secure web access. For Tailscale mode, this can be any available port since it won't be publicly exposed." Type="Port" Display="always" Required="true" Mask="false"/>
+
+  <!-- =============================================================== -->
+  <!-- TAILSCALE CONFIGURATION -->
+  <!-- =============================================================== -->
+
+  <Config Name="Tailscale Auth Key" Target="TAILSCALE_AUTH_KEY" Default="" Mode="" Description="TAILSCALE ONLY: Your Tailscale auth key (starts with tskey-auth-). Get this from Tailscale Admin Console → Settings → Keys. Leave empty for public domain mode." Type="Variable" Display="advanced" Required="false" Mask="true"/>
+
+  <Config Name="Tailscale Hostname" Target="TAILSCALE_HOSTNAME" Default="stoat" Mode="" Description="TAILSCALE ONLY: Hostname for your Stoat instance on Tailscale network (will become hostname.tailnet.ts.net)" Type="Variable" Display="advanced" Required="false" Mask="false"/>
+
+  <!-- =============================================================== -->
+  <!-- SECURITY SETTINGS -->
+  <!-- =============================================================== -->
+
+  <Config Name="Invite Only Mode" Target="INVITE_ONLY" Default="false" Mode="" Description="Enable invite-only registration. When true, users need an invite code to register." Type="Variable" Display="always" Required="false" Mask="false">
+    <Option>false:Open Registration</Option>
+    <Option>true:Invite Only</Option>
+  </Config>
+
+  <Config Name="RabbitMQ Username" Target="RABBITMQ_USER" Default="rabbituser" Mode="" Description="Username for RabbitMQ message broker. Change for better security." Type="Variable" Display="advanced" Required="true" Mask="false"/>
+
+  <Config Name="RabbitMQ Password" Target="RABBITMQ_PASS" Default="" Mode="" Description="Password for RabbitMQ message broker. Will be auto-generated if left empty." Type="Variable" Display="advanced" Required="false" Mask="true"/>
+
+  <Config Name="MinIO Username" Target="MINIO_USER" Default="minioautumn" Mode="" Description="Username for MinIO S3-compatible storage. Change for better security." Type="Variable" Display="advanced" Required="true" Mask="false"/>
+
+  <Config Name="MinIO Password" Target="MINIO_PASS" Default="" Mode="" Description="Password for MinIO S3-compatible storage. Will be auto-generated if left empty." Type="Variable" Display="advanced" Required="false" Mask="true"/>
+
+  <!-- =============================================================== -->
+  <!-- DATA STORAGE PATHS -->
+  <!-- =============================================================== -->
+
+  <Config Name="Database Data Path" Target="DATABASE_PATH" Default="/mnt/user/appdata/stoat/data/database" Mode="rw" Description="Path to store MongoDB database files" Type="Path" Display="advanced" Required="true" Mask="false"/>
+
+  <Config Name="Files Storage Path" Target="FILES_PATH" Default="/mnt/user/appdata/stoat/data/files" Mode="rw" Description="Path to store uploaded files and attachments" Type="Path" Display="advanced" Required="true" Mask="false"/>
+
+  <Config Name="Redis Data Path" Target="REDIS_PATH" Default="/mnt/user/appdata/stoat/data/redis" Mode="rw" Description="Path to store Redis cache data" Type="Path" Display="advanced" Required="true" Mask="false"/>
+
+  <Config Name="RabbitMQ Data Path" Target="RABBITMQ_PATH" Default="/mnt/user/appdata/stoat/data/rabbitmq" Mode="rw" Description="Path to store RabbitMQ message queue data" Type="Path" Display="advanced" Required="true" Mask="false"/>
+
+  <!-- =============================================================== -->
+  <!-- ADVANCED FEATURES -->
+  <!-- =============================================================== -->
+
+  <Config Name="Tenor API Key" Target="TENOR_API_KEY" Default="" Mode="" Description="Optional: Tenor API key for GIF search functionality. Get from https://developers.google.com/tenor/" Type="Variable" Display="advanced" Required="false" Mask="true"/>
+
+  <Config Name="Enable Push Notifications" Target="ENABLE_PUSH" Default="false" Mode="" Description="Enable push notifications (requires additional FCM/APM configuration)" Type="Variable" Display="advanced" Required="false" Mask="false">
+    <Option>false:Disabled</Option>
+    <Option>true:Enabled</Option>
+  </Config>
+
+  <Config Name="Behind Reverse Proxy" Target="BEHIND_PROXY" Default="false" Mode="" Description="Set to true if Stoat is behind another reverse proxy (SWAG, NPM, Traefik, etc.)" Type="Variable" Display="advanced" Required="false" Mask="false">
+    <Option>false:Direct Access</Option>
+    <Option>true:Behind Proxy</Option>
+  </Config>
+
+  <!-- =============================================================== -->
+  <!-- AUTO-GENERATED SECRETS -->
+  <!-- =============================================================== -->
+
+  <Config Name="VAPID Private Key" Target="VAPID_PRIVATE_KEY" Default="" Mode="" Description="Auto-generated: VAPID private key for push notifications. Leave empty to auto-generate." Type="Variable" Display="advanced" Required="false" Mask="true"/>
+
+  <Config Name="VAPID Public Key" Target="VAPID_PUBLIC_KEY" Default="" Mode="" Description="Auto-generated: VAPID public key for push notifications. Leave empty to auto-generate." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+
+  <Config Name="Files Encryption Key" Target="FILES_ENCRYPTION_KEY" Default="" Mode="" Description="Auto-generated: Encryption key for file storage. Leave empty to auto-generate." Type="Variable" Display="advanced" Required="false" Mask="true"/>
+
+  <!-- =============================================================== -->
+  <!-- POST INSTALL SCRIPT -->
+  <!-- =============================================================== -->
+
+  <PostArgs>
+# Stoat Chat - Post Installation Setup
+echo "==================================="
+echo "🚀 STOAT CHAT - SETUP STARTING"
+echo "==================================="
+
+# Create directory structure
+mkdir -p "${APPDATA_PATH}/data/database"
+mkdir -p "${APPDATA_PATH}/data/files" 
+mkdir -p "${APPDATA_PATH}/data/redis"
+mkdir -p "${APPDATA_PATH}/data/rabbitmq"
+mkdir -p "${APPDATA_PATH}/config"
+
+# Download setup script and compose files
+cd "${APPDATA_PATH}"
+
+# Check if repo already exists, if not clone it
+if [ ! -f "setup-unraid.sh" ]; then
+    echo "📦 Downloading Stoat Unraid files..."
+    git clone https://github.com/YOUR_USERNAME/stoat-unraid.git temp-repo
+    cp -r temp-repo/* .
+    rm -rf temp-repo
+    chmod +x setup-unraid.sh
+fi
+
+# Generate secure passwords if not provided
+if [ -z "${RABBITMQ_PASS}" ]; then
+    export RABBITMQ_PASS=$(openssl rand -hex 16)
+fi
+if [ -z "${MINIO_PASS}" ]; then
+    export MINIO_PASS=$(openssl rand -hex 16)
+fi
+
+# Build setup command based on deployment mode
+SETUP_ARGS="${STOAT_DOMAIN}"
+if [ "${DEPLOYMENT_MODE}" = "tailscale" ]; then
+    SETUP_ARGS="${SETUP_ARGS} --tailscale"
+fi
+if [ "${BEHIND_PROXY}" = "true" ]; then
+    SETUP_ARGS="${SETUP_ARGS} --behind-proxy"
+fi
+if [ "${HTTP_PORT}" != "80" ]; then
+    SETUP_ARGS="${SETUP_ARGS} --http-port ${HTTP_PORT}"
+fi
+if [ "${HTTPS_PORT}" != "443" ]; then
+    SETUP_ARGS="${SETUP_ARGS} --https-port ${HTTPS_PORT}"
+fi
+
+# Run setup script
+echo "🔧 Running Stoat setup..."
+./setup-unraid.sh ${SETUP_ARGS}
+
+# Configure Tailscale auth key if provided
+if [ "${DEPLOYMENT_MODE}" = "tailscale" ] && [ -n "${TAILSCALE_AUTH_KEY}" ]; then
+    echo "🔐 Configuring Tailscale auth key..."
+    sed -i "s/your_tailscale_auth_key_here/${TAILSCALE_AUTH_KEY}/" .env
+fi
+
+# Set invite-only mode if enabled
+if [ "${INVITE_ONLY}" = "true" ]; then
+    echo "🔒 Enabling invite-only mode..."
+    echo "INVITE_ONLY=true" >> .env
+fi
+
+# Add Tenor API key if provided
+if [ -n "${TENOR_API_KEY}" ]; then
+    echo "🎞️ Adding Tenor API key..."
+    echo "TENOR_API_KEY=${TENOR_API_KEY}" >> .env
+fi
+
+echo "==================================="
+echo "✅ STOAT CHAT - SETUP COMPLETE"
+echo "==================================="
+echo ""
+echo "📋 NEXT STEPS:"
+if [ "${DEPLOYMENT_MODE}" = "tailscale" ]; then
+    echo "1. Make sure Tailscale is set up on your network"
+    echo "2. Start the containers: docker compose up -d"
+    echo "3. Run: ./tailscale-setup.sh to configure Tailscale Serve"
+    echo "4. Access Stoat at: https://${TAILSCALE_HOSTNAME}.your-tailnet.ts.net"
+else
+    echo "1. Make sure your domain DNS points to this server"
+    echo "2. Start the containers: docker compose up -d"
+    echo "3. Access Stoat at: https://${STOAT_DOMAIN}"
+fi
+echo ""
+echo "📖 Full documentation: https://github.com/YOUR_USERNAME/stoat-unraid"
+echo "🆘 Support: https://github.com/revoltchat/self-hosted/issues"
+echo ""
+  </PostArgs>
+</Container>

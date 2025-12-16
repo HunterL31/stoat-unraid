@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stoat Chat - Unraid Configuration Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .form-container {
+            padding: 40px;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+
+        .form-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-section .icon {
+            font-size: 1.2em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .deployment-mode {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .mode-option {
+            padding: 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .mode-option:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .mode-option.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .mode-option .mode-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .mode-option h4 {
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .mode-option p {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .tailscale-section {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #e3f2fd;
+            border-radius: 10px;
+            border: 1px solid #2196f3;
+        }
+
+        .tailscale-section.show {
+            display: block;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .generate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 30px auto;
+            min-width: 200px;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .output-section {
+            display: none;
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border-left: 5px solid #28a745;
+        }
+
+        .output-section.show {
+            display: block;
+        }
+
+        .output-section h3 {
+            color: #28a745;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow-x: auto;
+            margin: 15px 0;
+            position: relative;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #4a5568;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+
+        .copy-btn:hover {
+            background: #2d3748;
+        }
+
+        .step-instructions {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .step-instructions h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .step-instructions ol {
+            margin-left: 20px;
+        }
+
+        .step-instructions li {
+            margin-bottom: 8px;
+            color: #856404;
+        }
+
+        .warning {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .info {
+            background: #cce7ff;
+            border: 1px solid #b3d9ff;
+            color: #004085;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .deployment-mode {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .form-container {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Stoat Chat</h1>
+            <p>Unraid Configuration Generator</p>
+        </div>
+
+        <div class="form-container">
+            <form id="configForm">
+                <!-- Deployment Mode -->
+                <div class="form-section">
+                    <h3><span class="icon">🌐</span>Deployment Mode</h3>
+                    <p>Choose how you want to access your Stoat chat server:</p>
+                    
+                    <div class="deployment-mode">
+                        <div class="mode-option" data-mode="domain">
+                            <div class="mode-icon">🌍</div>
+                            <h4>Public Domain</h4>
+                            <p>Accessible from anywhere with a domain name</p>
+                        </div>
+                        <div class="mode-option" data-mode="tailscale">
+                            <div class="mode-icon">🔐</div>
+                            <h4>Tailscale VPN</h4>
+                            <p>Private access through Tailscale network</p>
+                        </div>
+                    </div>
+                    <input type="hidden" id="deploymentMode" name="deploymentMode" value="domain">
+
+                    <div class="tailscale-section" id="tailscaleInfo">
+                        <div class="info">
+                            <strong>Tailscale Mode Benefits:</strong>
+                            <ul>
+                                <li>✅ No public ports exposed</li>
+                                <li>✅ Secure access for friends/family</li>
+                                <li>✅ Automatic HTTPS certificates</li>
+                                <li>✅ Works behind NAT/firewalls</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Basic Configuration -->
+                <div class="form-section">
+                    <h3><span class="icon">⚙️</span>Basic Configuration</h3>
+                    
+                    <div class="form-group">
+                        <label for="domain">Domain/Hostname *</label>
+                        <input type="text" id="domain" name="domain" required 
+                               placeholder="chat.example.com">
+                        <small id="domainHelp">For public: your domain name. For Tailscale: your machine name (becomes name.tailnet.ts.net)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="appdataPath">Appdata Path</label>
+                        <input type="text" id="appdataPath" name="appdataPath" 
+                               value="/mnt/user/appdata/stoat" required>
+                        <small>Where Stoat will store all its data on your Unraid server</small>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="httpPort">HTTP Port</label>
+                            <input type="number" id="httpPort" name="httpPort" value="80" min="1" max="65535">
+                            <small>Web server HTTP port</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="httpsPort">HTTPS Port</label>
+                            <input type="number" id="httpsPort" name="httpsPort" value="443" min="1" max="65535">
+                            <small>Web server HTTPS port</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tailscale Configuration -->
+                <div class="form-section" id="tailscaleSection" style="display: none;">
+                    <h3><span class="icon">🔑</span>Tailscale Configuration</h3>
+                    
+                    <div class="form-group">
+                        <label for="tailscaleAuthKey">Tailscale Auth Key</label>
+                        <input type="password" id="tailscaleAuthKey" name="tailscaleAuthKey" 
+                               placeholder="tskey-auth-...">
+                        <small>Get this from Tailscale Admin Console → Settings → Keys (make it reusable)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tailscaleHostname">Tailscale Hostname</label>
+                        <input type="text" id="tailscaleHostname" name="tailscaleHostname" 
+                               value="stoat" pattern="[a-z0-9-]+">
+                        <small>Your Stoat instance name on Tailscale (no spaces, lowercase)</small>
+                    </div>
+
+                    <div class="info">
+                        <strong>📋 How to get your Tailscale Auth Key:</strong>
+                        <ol>
+                            <li>Go to <a href="https://login.tailscale.com/admin/settings/keys" target="_blank">Tailscale Admin Console → Settings → Keys</a></li>
+                            <li>Click "Generate auth key"</li>
+                            <li>Enable "Reusable" so container can reconnect</li>
+                            <li>Copy the key (starts with tskey-auth-)</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Security Settings -->
+                <div class="form-section">
+                    <h3><span class="icon">🔒</span>Security Settings</h3>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="inviteOnly" name="inviteOnly">
+                        <label for="inviteOnly">Enable Invite-Only Mode</label>
+                    </div>
+                    <small>When enabled, users need an invite code to register</small>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="behindProxy" name="behindProxy">
+                        <label for="behindProxy">Behind Reverse Proxy</label>
+                    </div>
+                    <small>Enable if using SWAG, Nginx Proxy Manager, Traefik, etc.</small>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rabbitmqUser">RabbitMQ Username</label>
+                            <input type="text" id="rabbitmqUser" name="rabbitmqUser" value="rabbituser">
+                            <small>Username for message queue service</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="minioUser">MinIO Username</label>
+                            <input type="text" id="minioUser" name="minioUser" value="minioautumn">
+                            <small>Username for file storage service</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced Settings -->
+                <div class="form-section">
+                    <h3><span class="icon">🎛️</span>Advanced Settings</h3>
+                    
+                    <div class="form-group">
+                        <label for="tenorApiKey">Tenor API Key (Optional)</label>
+                        <input type="password" id="tenorApiKey" name="tenorApiKey" 
+                               placeholder="Enter Tenor API key for GIF search">
+                        <small>Get from <a href="https://developers.google.com/tenor/guides/quickstart" target="_blank">Google Tenor API</a> for GIF search functionality</small>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="enablePush" name="enablePush">
+                        <label for="enablePush">Enable Push Notifications</label>
+                    </div>
+                    <small>Requires additional FCM/APM configuration (advanced)</small>
+                </div>
+
+                <button type="submit" class="generate-btn">
+                    🚀 Generate Configuration
+                </button>
+            </form>
+
+            <!-- Output Section -->
+            <div class="output-section" id="outputSection">
+                <h3><span class="icon">✅</span>Configuration Generated!</h3>
+                
+                <div class="step-instructions">
+                    <h4>📋 Installation Steps:</h4>
+                    <ol id="installSteps">
+                        <!-- Steps will be populated by JavaScript -->
+                    </ol>
+                </div>
+
+                <h4>📄 Environment Configuration (.env file):</h4>
+                <div class="code-block">
+                    <button class="copy-btn" onclick="copyToClipboard('envContent')">Copy</button>
+                    <pre id="envContent"></pre>
+                </div>
+
+                <h4>🐳 Docker Compose Command:</h4>
+                <div class="code-block">
+                    <button class="copy-btn" onclick="copyToClipboard('dockerCommand')">Copy</button>
+                    <pre id="dockerCommand"></pre>
+                </div>
+
+                <div id="tailscaleInstructions" style="display: none;">
+                    <h4>🔐 Tailscale Setup Command:</h4>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyToClipboard('tailscaleCommand')">Copy</button>
+                        <pre id="tailscaleCommand"></pre>
+                    </div>
+                </div>
+
+                <div class="success">
+                    <strong>🎉 Next Steps:</strong>
+                    <p id="nextStepsText"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Deployment mode selection
+        document.querySelectorAll('.mode-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.mode-option').forEach(opt => opt.classList.remove('active'));
+                this.classList.add('active');
+                
+                const mode = this.dataset.mode;
+                document.getElementById('deploymentMode').value = mode;
+                
+                const tailscaleSection = document.getElementById('tailscaleSection');
+                const tailscaleInfo = document.getElementById('tailscaleInfo');
+                const domainHelp = document.getElementById('domainHelp');
+                const domain = document.getElementById('domain');
+                
+                if (mode === 'tailscale') {
+                    tailscaleSection.style.display = 'block';
+                    tailscaleInfo.classList.add('show');
+                    domainHelp.textContent = 'Your Tailscale machine name (will become name.your-tailnet.ts.net)';
+                    domain.placeholder = 'stoat (becomes stoat.tailnet.ts.net)';
+                } else {
+                    tailscaleSection.style.display = 'none';
+                    tailscaleInfo.classList.remove('show');
+                    domainHelp.textContent = 'Your public domain name (e.g., chat.example.com)';
+                    domain.placeholder = 'chat.example.com';
+                }
+            });
+        });
+
+        // Initialize with domain mode
+        document.querySelector('.mode-option[data-mode="domain"]').click();
+
+        // Form submission
+        document.getElementById('configForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            generateConfiguration();
+        });
+
+        function generateConfiguration() {
+            const formData = new FormData(document.getElementById('configForm'));
+            const config = Object.fromEntries(formData.entries());
+            
+            // Generate secure passwords
+            const rabbitmqPass = generatePassword(16);
+            const minioPass = generatePassword(16);
+            const vapidPrivateKey = generateVapidKeys().privateKey;
+            const vapidPublicKey = generateVapidKeys().publicKey;
+            const filesEncryptionKey = generatePassword(32);
+
+            // Build environment file
+            let envContent = `# Stoat Chat Configuration
+# Generated on ${new Date().toLocaleString()}
+
+# Basic Configuration
+STOAT_DOMAIN=${config.domain}
+APPDATA_PATH=${config.appdataPath}
+HTTP_PORT=${config.httpPort}
+HTTPS_PORT=${config.httpsPort}
+
+# Security
+RABBITMQ_USER=${config.rabbitmqUser}
+RABBITMQ_PASS=${rabbitmqPass}
+MINIO_USER=${config.minioUser}
+MINIO_PASS=${minioPass}
+
+# Generated Keys
+VAPID_PRIVATE_KEY=${vapidPrivateKey}
+VAPID_PUBLIC_KEY=${vapidPublicKey}
+FILES_ENCRYPTION_KEY=${filesEncryptionKey}
+
+# Optional Settings`;
+
+            if (config.deploymentMode === 'tailscale' && config.tailscaleAuthKey) {
+                envContent += `\nTAILSCALE_AUTH_KEY=${config.tailscaleAuthKey}`;
+                envContent += `\nTAILSCALE_HOSTNAME=${config.tailscaleHostname}`;
+            }
+
+            if (config.inviteOnly) {
+                envContent += `\nINVITE_ONLY=true`;
+            }
+
+            if (config.behindProxy) {
+                envContent += `\nBEHIND_PROXY=true`;
+            }
+
+            if (config.tenorApiKey) {
+                envContent += `\nTENOR_API_KEY=${config.tenorApiKey}`;
+            }
+
+            if (config.enablePush) {
+                envContent += `\nENABLE_PUSH=true`;
+            }
+
+            // Generate installation steps
+            const steps = [];
+            steps.push(`Install "Docker Compose Manager" from Unraid Community Apps`);
+            steps.push(`SSH into your Unraid server: <code>ssh root@your-unraid-ip</code>`);
+            steps.push(`Create directory: <code>mkdir -p ${config.appdataPath}</code>`);
+            steps.push(`Navigate to directory: <code>cd ${config.appdataPath}</code>`);
+            steps.push(`Clone repository: <code>git clone https://github.com/YOUR_USERNAME/stoat-unraid.git .</code>`);
+            steps.push(`Create the .env file with the configuration above`);
+            steps.push(`Make setup script executable: <code>chmod +x setup-unraid.sh</code>`);
+
+            let setupCommand = `./setup-unraid.sh ${config.domain}`;
+            if (config.deploymentMode === 'tailscale') {
+                setupCommand += ` --tailscale`;
+            }
+            if (config.behindProxy) {
+                setupCommand += ` --behind-proxy`;
+            }
+            if (config.httpPort !== '80') {
+                setupCommand += ` --http-port ${config.httpPort}`;
+            }
+            if (config.httpsPort !== '443') {
+                setupCommand += ` --https-port ${config.httpsPort}`;
+            }
+
+            steps.push(`Run setup: <code>${setupCommand}</code>`);
+            steps.push(`Start services: <code>docker compose up -d</code>`);
+
+            if (config.deploymentMode === 'tailscale') {
+                steps.push(`Configure Tailscale Serve: <code>./tailscale-setup.sh</code>`);
+            }
+
+            // Populate output
+            document.getElementById('envContent').textContent = envContent;
+            document.getElementById('dockerCommand').textContent = `cd ${config.appdataPath}
+${setupCommand}
+docker compose up -d`;
+
+            if (config.deploymentMode === 'tailscale') {
+                document.getElementById('tailscaleCommand').textContent = `./tailscale-setup.sh`;
+                document.getElementById('tailscaleInstructions').style.display = 'block';
+            }
+
+            // Populate steps
+            const stepsList = document.getElementById('installSteps');
+            stepsList.innerHTML = steps.map((step, index) => `<li>${step}</li>`).join('');
+
+            // Next steps text
+            const accessUrl = config.deploymentMode === 'tailscale' 
+                ? `https://${config.tailscaleHostname}.your-tailnet.ts.net`
+                : `https://${config.domain}`;
+            
+            document.getElementById('nextStepsText').innerHTML = 
+                `After completing the installation steps above, you'll be able to access your Stoat chat at: <strong>${accessUrl}</strong>`;
+
+            // Show output section
+            document.getElementById('outputSection').classList.add('show');
+            document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function generatePassword(length) {
+            const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let password = '';
+            for (let i = 0; i < length; i++) {
+                password += charset.charAt(Math.floor(Math.random() * charset.length));
+            }
+            return password;
+        }
+
+        function generateVapidKeys() {
+            // This is a simplified version - in real implementation you'd use proper crypto
+            return {
+                privateKey: generatePassword(43),
+                publicKey: generatePassword(87)
+            };
+        }
+
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            
+            navigator.clipboard.writeText(text).then(function() {
+                const button = element.parentElement.querySelector('.copy-btn');
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                button.style.background = '#28a745';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '#4a5568';
+                }, 2000);
+            }, function(err) {
+                console.error('Could not copy text: ', err);
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+            });
+        }
+    </script>
+</body>
+</html>
