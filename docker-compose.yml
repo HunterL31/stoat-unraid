@@ -321,6 +321,31 @@ services:
       net.unraid.docker.managed: "composeman"
 
   # ---------------------------------------------------------------------------
+  # Revcord: Discord-Revolt Bridge (Optional)
+  # ---------------------------------------------------------------------------
+  revcord:
+    image: ghcr.io/mayudev/revcord:latest
+    container_name: stoat-revcord
+    restart: unless-stopped
+    depends_on:
+      - api
+      - events
+    environment:
+      - DISCORD_TOKEN=${REVCORD_DISCORD_TOKEN}
+      - REVOLT_TOKEN=${REVCORD_REVOLT_TOKEN}
+      - API_URL=${REVCORD_API_URL:-https://${TAILSCALE_HOSTNAME:-stoat}/api}
+      - REVOLT_ATTACHMENT_URL=${REVCORD_REVOLT_ATTACHMENT_URL:-https://${TAILSCALE_HOSTNAME:-stoat}/autumn}
+    volumes:
+      - ${APPDATA_PATH:-/mnt/user/appdata}/stoat/revcord:/app/data
+    networks:
+      - default
+    profiles:
+      - revcord
+    labels:
+      net.unraid.docker.managed: "composeman"
+      net.unraid.docker.icon: "https://raw.githubusercontent.com/mayudev/revcord/main/docs/revcord.png"
+
+  # ---------------------------------------------------------------------------
   # Create Buckets: One-time initialization for MinIO
   # ---------------------------------------------------------------------------
   createbuckets:
