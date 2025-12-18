@@ -175,7 +175,7 @@ services:
   # API Server: Main Stoat backend
   # ---------------------------------------------------------------------------
   api:
-    image: ghcr.io/revoltchat/server:20250930-2
+    image: ghcr.io/HunterL31/backend:latest
     container_name: stoat-api
     depends_on:
       database:
