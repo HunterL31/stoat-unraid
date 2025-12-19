@@ -2,6 +2,7 @@
 .env
 .env.web
 Revolt.toml
+*.backup
 
 # Data directories
 data/
@@ -11,6 +12,7 @@ rabbitmq/
 minio/
 caddy-data/
 caddy-config/
+tailscale/
 
 # Generated keys
 *.pem
