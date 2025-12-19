@@ -175,7 +175,7 @@ services:
   # API Server: Main Stoat backend
   # ---------------------------------------------------------------------------
   api:
-    image: ghcr.io/HunterL31/backend:latest
+    image: ghcr.io/hunterl31/stoatchat_backend:latest
     container_name: stoat-api
     depends_on:
       database:
