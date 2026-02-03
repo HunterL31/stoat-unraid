@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>Stoat-Chat</Name>
+  <Repository>ghcr.io/revoltchat/server:20250930-2</Repository>
+  <Registry>https://github.com/revoltchat/self-hosted</Registry>
+  <Branch>
+    <Tag>latest</Tag>
+    <TagDescription>Latest stable release</TagDescription>
+  </Branch>
+  <Network>bridge</Network>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/revoltchat/self-hosted/issues</Support>
+  <Project>https://revolt.chat</Project>
+  <Overview>
+Stoat (formerly Revolt) is a self-hosted, open-source chat platform - a privacy-focused alternative to Discord.
+
+⚠️ IMPORTANT: This is a DOCKER COMPOSE application requiring multiple containers.
+
+🌐 EASY SETUP WITH CONFIGURATION GENERATOR:
+Before installing, visit our configuration generator to easily set up your deployment:
+👉 https://YOUR_USERNAME.github.io/stoat-unraid/config-generator.html
+
+The generator will help you:
+• Choose between Public Domain or Tailscale VPN deployment
+• Configure all necessary settings
+• Generate secure credentials automatically
+• Provide step-by-step installation commands
+
+✨ FEATURES:
+• Real-time messaging with WebSocket support
+• File uploads and attachments
+• Image and link previews
+• GIF search via Tenor (with API key)
+• Push notifications support
+• Full API access
+• Two deployment modes: Public or Private (Tailscale)
+
+📋 DEPLOYMENT OPTIONS:
+🌍 PUBLIC DOMAIN: Accessible from internet with your domain name
+🔐 TAILSCALE VPN: Private access via Tailscale network (recommended for sharing with friends)
+
+📋 REQUIREMENTS:
+• Docker Compose Manager plugin (install from Community Apps)
+• For PUBLIC: Domain name with DNS pointing to your server  
+• For TAILSCALE: Tailscale account and auth key
+• 2GB+ RAM recommended
+
+🚀 QUICK INSTALL:
+1. Install "Docker Compose Manager" from Community Apps
+2. Use the configuration generator (link above) to generate your setup
+3. SSH into Unraid and follow the generated commands
+4. Start with: docker compose up -d
+
+📖 Full documentation: https://github.com/YOUR_USERNAME/stoat-unraid
+  </Overview>
+  <Category>Network:Chat Productivity: Tools:Utilities</Category>
+  <WebUI>https://[STOAT_DOMAIN]</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/YOUR_USERNAME/stoat-unraid/main/community-apps/stoat-chat-simple.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/revoltchat/revoltchat-solid/master/public/assets/icons/android-chrome-512x512.png</Icon>
+  <ExtraParams/>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled/>
+  <DonateText>Support Revolt/Stoat Development</DonateText>
+  <DonateLink>https://opencollective.com/revolt</DonateLink>
+  <Requires>
+⚠️ IMPORTANT SETUP INSTRUCTIONS:
+
+This template provides the Stoat container but requires Docker Compose setup.
+
+🌐 BEFORE INSTALLING - USE OUR CONFIGURATION GENERATOR:
+Visit: https://YOUR_USERNAME.github.io/stoat-unraid/config-generator.html
+
+The generator will create all necessary configuration files and commands.
+
+📋 MANUAL SETUP (if not using generator):
+1. Install "Docker Compose Manager" from Community Apps
+2. SSH into your Unraid server
+3. Create directory: mkdir -p /mnt/user/appdata/stoat
+4. Clone repo: git clone https://github.com/YOUR_USERNAME/stoat-unraid.git /mnt/user/appdata/stoat
+5. Configure with: ./setup-unraid.sh your.domain.com
+6. Start with: docker compose up -d
+
+This template is provided for Community Apps compatibility but the actual deployment uses docker-compose.yml in your appdata directory.
+  </Requires>
+
+  <!-- Basic configuration for template compatibility -->
+  <Config Name="Domain Name" Target="STOAT_DOMAIN" Default="chat.example.com" Mode="" Description="Your domain name - use the configuration generator for complete setup" Type="Variable" Display="always" Required="true" Mask="false"/>
+  
+  <Config Name="Appdata Path" Target="/mnt/user/appdata/stoat" Default="/mnt/user/appdata/stoat" Mode="rw" Description="Path for Stoat data - the setup script will organize this properly" Type="Path" Display="always" Required="true" Mask="false"/>
+  
+  <Config Name="HTTP Port" Target="80" Default="80" Mode="tcp" Description="HTTP port - configure properly using the setup generator" Type="Port" Display="advanced" Required="false" Mask="false"/>
+  
+  <Config Name="HTTPS Port" Target="443" Default="443" Mode="tcp" Description="HTTPS port - configure properly using the setup generator" Type="Port" Display="advanced" Required="false" Mask="false"/>
+
+  <!-- Post-install message -->
+  <PostArgs>
+echo "=============================================="
+echo "🚀 STOAT CHAT - SETUP REQUIRED"
+echo "=============================================="
+echo ""
+echo "⚠️  This template has been added to your Docker tab,"
+echo "    but Stoat requires Docker Compose setup to work properly."
+echo ""
+echo "🌐 EASY SETUP:"
+echo "   Visit our configuration generator:"
+echo "   https://YOUR_USERNAME.github.io/stoat-unraid/config-generator.html"
+echo ""
+echo "📋 MANUAL SETUP:"
+echo "   1. SSH into Unraid: ssh root@$(hostname -I | awk '{print $1}')"
+echo "   2. Run: mkdir -p /mnt/user/appdata/stoat && cd /mnt/user/appdata/stoat"
+echo "   3. Run: git clone https://github.com/YOUR_USERNAME/stoat-unraid.git ."
+echo "   4. Run: chmod +x setup-unraid.sh"
+echo "   5. Run: ./setup-unraid.sh your.domain.com"
+echo "   6. Run: docker compose up -d"
+echo ""
+echo "🔐 FOR TAILSCALE (PRIVATE ACCESS):"
+echo "   Use --tailscale flag: ./setup-unraid.sh stoat --tailscale"
+echo ""
+echo "📖 Full docs: https://github.com/YOUR_USERNAME/stoat-unraid"
+echo ""
+echo "=============================================="
+  </PostArgs>
+</Container>

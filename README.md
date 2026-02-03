@@ -14,15 +14,33 @@
 
 This fork is specifically designed for **Unraid** users who want to:
 - 🔐 **Share securely with Tailscale** - Give friends access to your chat without exposing your server
-- 🚀 **Easy setup** - Automated configuration scripts for Unraid
+- 🚀 **Easy setup** - Automated configuration scripts and web-based generator
 - 📦 **Unraid-optimized** - Proper appdata paths, container labels, and compose file structure
 - 🎮 **Two deployment modes** - Public domain OR private Tailscale network
+- 🌐 **Community Apps ready** - Available in Unraid Community Applications
 
 ---
 
 ## 🎮 Quick Start
 
-### Option 1: Tailscale (Recommended for sharing with friends)
+### Option 1: Community Apps + Configuration Generator (Easiest)
+
+🌐 **Use our web-based configuration generator for the easiest setup:**
+
+**[🚀 Launch Configuration Generator →](https://YOUR_USERNAME.github.io/stoat-unraid/config-generator.html)**
+
+The generator will:
+- Walk you through all configuration options
+- Generate secure credentials automatically  
+- Create step-by-step installation commands
+- Support both domain and Tailscale setups
+
+**Then install from Unraid Community Apps:**
+1. Go to **Apps** tab in Unraid
+2. Search for **"Stoat Chat"**
+3. Click **Install** and follow the generated instructions
+
+### Option 2: Manual Tailscale Setup (For advanced users)
 
 ```bash
 # SSH into Unraid
@@ -46,7 +64,7 @@ docker compose up -d
 
 **[Full Tailscale Setup Guide →](./TAILSCALE-SETUP.md)**
 
-### Option 2: Public Domain
+### Option 3: Manual Public Domain Setup
 
 ```bash
 # SSH into Unraid
@@ -68,9 +86,16 @@ docker compose up -d
 
 ## 📚 Documentation
 
+### Installation Guides
+- **[🌐 Configuration Generator](https://YOUR_USERNAME.github.io/stoat-unraid/config-generator.html)** - Easy web-based setup (Recommended)
 - **[Unraid Installation Guide](./UNRAID-README.md)** - Standard setup with public domain
-- **[Tailscale Setup Guide](./TAILSCALE-SETUP.md)** - Secure private network setup
+- **[Tailscale Setup Guide](./TAILSCALE-SETUP.md)** - Secure private network setup  
 - **[Unraid GUI Installation](./UNRAID-GUI-INSTALL.md)** - Using Unraid's Docker Compose GUI
+
+### Community Apps & Advanced Setup
+- **[Community Apps Submission](./COMMUNITY-APPS-SUBMISSION.md)** - How to submit to Community Applications
+- **[Simple Template](./community-apps/stoat-chat-simple.xml)** - Basic Community Apps template
+- **[Enhanced Template](./community-apps/stoat-chat-enhanced.xml)** - Full configuration template
 
 ---
 
@@ -81,6 +106,24 @@ docker compose up -d
 3. **Container labels** - Proper Unraid Docker labels for management
 4. **Setup scripts** - Automated configuration for both deployment modes
 5. **Single compose file** - One `docker-compose.yml` that works for both modes
+6. **Web configuration generator** - User-friendly setup wizard
+7. **Community Apps templates** - Ready for Unraid Community Applications
+
+## ⭐ Community Apps Features
+
+### 🌐 Web Configuration Generator
+- **Easy Setup Wizard:** Step-by-step configuration for all options
+- **Secure Credential Generation:** Automatic generation of secure passwords and keys
+- **Dual Mode Support:** Configure for either public domain or Tailscale deployment
+- **Copy-Paste Commands:** Generated setup commands ready to use
+- **Real-time Validation:** Input validation and helpful hints
+
+### 📦 Unraid Integration
+- **Community Apps Ready:** Install directly from Unraid Apps tab
+- **Docker Compose Manager:** Proper multi-container application support
+- **Template Validation:** Tested templates for reliable deployment
+- **Post-Install Guidance:** Clear instructions after template installation
+- **Path Management:** Proper Unraid appdata path handling
 
 ---
 
