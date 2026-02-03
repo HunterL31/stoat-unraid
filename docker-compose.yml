@@ -175,7 +175,7 @@ services:
   # API Server: Main Stoat backend
   # ---------------------------------------------------------------------------
   api:
-    image: ghcr.io/hunterl31/stoatchat_backend:latest
+    image: ghcr.io/hunterl31/api:latest
     container_name: stoat-api
     depends_on:
       database:
@@ -198,7 +198,7 @@ services:
   # Events: WebSocket service for real-time events
   # ---------------------------------------------------------------------------
   events:
-    image: ghcr.io/revoltchat/bonfire:20250930-2
+    image: ghcr.io/hunterl31/events:latest
     container_name: stoat-events
     depends_on:
       database:
@@ -235,7 +235,7 @@ services:
   # Autumn: File server for uploads/attachments
   # ---------------------------------------------------------------------------
   autumn:
-    image: ghcr.io/revoltchat/autumn:20250930-2
+    image: ghcr.io/hunterl31/files:latest
     container_name: stoat-autumn
     depends_on:
       database:
@@ -256,7 +256,7 @@ services:
   # January: Metadata and image proxy
   # ---------------------------------------------------------------------------
   january:
-    image: ghcr.io/revoltchat/january:20250930-2
+    image: ghcr.io/hunterl31/proxy:latest
     container_name: stoat-january
     volumes:
       - ./Revolt.toml:/Revolt.toml:ro
@@ -272,7 +272,7 @@ services:
   # Gifbox: Tenor GIF proxy
   # ---------------------------------------------------------------------------
   gifbox:
-    image: ghcr.io/revoltchat/gifbox:20250930-2
+    image: ghcr.io/hunterl31/gifbox:latest
     container_name: stoat-gifbox
     volumes:
       - ./Revolt.toml:/Revolt.toml:ro
@@ -288,7 +288,7 @@ services:
   # Crond: Scheduled task daemon
   # ---------------------------------------------------------------------------
   crond:
-    image: ghcr.io/revoltchat/crond:20250930-2
+    image: ghcr.io/hunterl31/crond:latest
     container_name: stoat-crond
     depends_on:
       database:
@@ -305,7 +305,7 @@ services:
   # Pushd: Push notification daemon
   # ---------------------------------------------------------------------------
   pushd:
-    image: ghcr.io/revoltchat/pushd:20250930-2
+    image: ghcr.io/hunterl31/pushd:latest
     container_name: stoat-pushd
     depends_on:
       database:
@@ -319,6 +319,31 @@ services:
     restart: unless-stopped
     labels:
       net.unraid.docker.managed: "composeman"
+
+  # ---------------------------------------------------------------------------
+  # Revcord: Discord-Revolt Bridge (Optional)
+  # ---------------------------------------------------------------------------
+  revcord:
+    image: ghcr.io/mayudev/revcord:latest
+    container_name: stoat-revcord
+    restart: unless-stopped
+    depends_on:
+      - api
+      - events
+    environment:
+      - DISCORD_TOKEN=${REVCORD_DISCORD_TOKEN}
+      - REVOLT_TOKEN=${REVCORD_REVOLT_TOKEN}
+      - API_URL=${REVCORD_API_URL:-https://${TAILSCALE_HOSTNAME:-stoat}/api}
+      - REVOLT_ATTACHMENT_URL=${REVCORD_REVOLT_ATTACHMENT_URL:-https://${TAILSCALE_HOSTNAME:-stoat}/autumn}
+    volumes:
+      - ${APPDATA_PATH:-/mnt/user/appdata}/stoat/revcord:/app/data
+    networks:
+      - default
+    profiles:
+      - revcord
+    labels:
+      net.unraid.docker.managed: "composeman"
+      net.unraid.docker.icon: "https://raw.githubusercontent.com/mayudev/revcord/main/docs/revcord.png"
 
   # ---------------------------------------------------------------------------
   # Create Buckets: One-time initialization for MinIO

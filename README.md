@@ -81,6 +81,39 @@ docker compose up -d
 3. **Container labels** - Proper Unraid Docker labels for management
 4. **Setup scripts** - Automated configuration for both deployment modes
 5. **Single compose file** - One `docker-compose.yml` that works for both modes
+6. **Web configuration generator** - User-friendly setup wizard
+7. **Community Apps templates** - Ready for Unraid Community Applications
+8. **Discord-Revolt bridge** - Optional revcord integration for cross-platform messaging
+
+## ⭐ Community Apps Features
+
+### 🌐 Web Configuration Generator
+- **Easy Setup Wizard:** Step-by-step configuration for all options
+- **Secure Credential Generation:** Automatic generation of secure passwords and keys
+- **Dual Mode Support:** Configure for either public domain or Tailscale deployment
+- **Copy-Paste Commands:** Generated setup commands ready to use
+- **Real-time Validation:** Input validation and helpful hints
+
+### 📦 Unraid Integration
+- **Community Apps Ready:** Install directly from Unraid Apps tab
+- **Docker Compose Manager:** Proper multi-container application support
+- **Template Validation:** Tested templates for reliable deployment
+- **Post-Install Guidance:** Clear instructions after template installation
+- **Path Management:** Proper Unraid appdata path handling
+
+### 🌉 Discord-Revolt Bridge (Optional)
+- **Cross-Platform Messaging:** Bridge messages between Discord and Revolt servers
+- **Full Feature Support:** Messages, attachments, replies, edits, deletes, and embeds
+- **Easy Setup:** Automated detection and configuration when environment variables are set
+- **Self-Contained:** Runs as an optional container alongside Stoat
+
+**To enable the Discord-Revolt bridge:**
+1. Edit your `.env` file and uncomment the `[revcord]` section variables
+2. Get a Discord bot token from [Discord Developer Portal](https://discord.com/developers/applications)
+3. Get a Revolt bot token from your Revolt server settings → My Bots → Create a bot
+4. Run: `./enable-revcord.sh` (or `docker compose --profile revcord up -d`)
+
+For detailed setup instructions, see the [revcord documentation](https://github.com/mayudev/revcord#configuration).
 
 ---
 
